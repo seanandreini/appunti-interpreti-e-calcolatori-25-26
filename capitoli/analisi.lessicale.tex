@@ -1,0 +1,217 @@
+\section{Analisi lessicale}
+
+Per descrivere formalmente i linguaggi di programmazione, partiamo da alcune definizioni di base, fondamentali per l'analisi lessicale.
+
+\subsection{Simboli, Stringhe e Alfabeti}
+\begin{itemize}
+    \item \textbf{Simbolo:} È un'entità indivisibile, come una lettera, una cifra o un segno di interpunzione.
+    \item \textbf{Alfabeto ($\Sigma$):} È un insieme finito e non vuoto di simboli. Ad esempio:
+    \begin{itemize}
+        \item $\Sigma = \{0, 1\}$ (l'alfabeto binario).
+        \item $\Sigma = \{a, b, \dots, z\}$ (l'insieme delle lettere minuscole).
+        \item L'insieme dei caratteri ASCII o Unicode.
+    \end{itemize}
+    \item \textbf{Stringa:} È una sequenza finita di simboli presi da un alfabeto. Viene spesso indicata con $s$ o $w$.
+    \item \textbf{Lunghezza di una stringa ($|s|$):} È il numero di simboli che compongono la stringa $s$. Ad esempio, $|banana| = 6$.
+    \item \textbf{Stringa Vuota ($\epsilon$):} È la stringa di lunghezza zero, cioè $|\epsilon| = 0$. È l'elemento neutro per la concatenazione.
+    \item \textbf{Concatenazione:} Date due stringhe $s$ e $t$, la loro concatenazione è la stringa $st$. L'operazione è associativa: $(st)u = s(tu)$.
+    \item \textbf{Potenza di una stringa ($s^k$):} Indica la stringa $s$ concatenata con se stessa $k$ volte. Per definizione, $s^0 = \epsilon$.
+    \item \textbf{Prefisso, Suffisso e Sottostringa:} Data una stringa $s=uvw$:
+    \begin{itemize}
+        \item $u$ è un \textbf{prefisso} di $s$.
+        \item $w$ è un \textbf{suffisso} di $s$.
+        \item $v$ è una \textbf{sottostringa} di $s$.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Operazioni sugli Alfabeti}
+Dato un alfabeto $\Sigma$, possiamo definire i seguenti insiemi di stringhe:
+\begin{itemize}
+    \item \textbf{Potenza di un Alfabeto ($\Sigma^k$):} L'insieme di tutte le stringhe di lunghezza $k$ formate da simboli in $\Sigma$. Ad esempio, se $\Sigma = \{0, 1\}$, allora $\Sigma^2 = \{00, 01, 10, 11\}$. Per definizione, $\Sigma^0 = \{\epsilon\}$.
+    \item \textbf{Chiusura di Kleene ($\Sigma^*$):} L'insieme di \textit{tutte} le possibili stringhe di qualsiasi lunghezza (inclusa la lunghezza zero) che si possono formare con i simboli di $\Sigma$. Formalmente, è definita come:
+    \[ \Sigma^* = \Sigma^0 \cup \Sigma^1 \cup \Sigma^2 \cup \dots \]
+    \item \textbf{Chiusura Positiva ($\Sigma^+$):} L'insieme di tutte le possibili stringhe di lunghezza maggiore o uguale a uno. Formalmente:
+    \[ \Sigma^+ = \Sigma^1 \cup \Sigma^2 \cup \Sigma^3 \cup \dots \]
+    Quindi, $\Sigma^* = \Sigma^+ \cup \{\epsilon\}$.
+\end{itemize}
+
+\subsection{Linguaggi e Loro Operazioni}
+\begin{itemize}
+    \item \textbf{Linguaggio (L):} Un linguaggio è un qualsiasi insieme (finito o infinito) di stringhe definite su un dato alfabeto $\Sigma$. Formalmente, un linguaggio è un sottoinsieme di $\Sigma^*$, cioè $L \subseteq \Sigma^*$.
+\end{itemize}
+
+Essendo i linguaggi degli insiemi di stringhe, possiamo applicare le comuni operazioni insiemistiche e altre operazioni specifiche:
+\begin{itemize}
+    \item \textbf{Unione:} $L \cup M = \{s | s \in L \text{ o } s \in M\}$.
+    \item \textbf{Intersezione:} $L \cap M = \{s | s \in L \text{ e } s \in M\}$.
+    \item \textbf{Differenza:} $L - M = \{s | s \in L \text{ e } s \notin M\}$.
+    \item \textbf{Concatenamento:} $LM = \{st | s \in L \text{ e } t \in M\}$.
+    \item \textbf{Chiusura di Kleene ($L^*$):} L'insieme di tutte le stringhe ottenute concatenando zero o più stringhe prese da $L$.
+    \item \textbf{Chiusura Positiva ($L^+$):} L'insieme di tutte le stringhe ottenute concatenando una o più stringhe prese da $L$.
+\end{itemize}
+
+\subsection{Definizione Ricorsiva di Linguaggi}
+Un modo potente per definire un linguaggio (spesso infinito) è usare una \textbf{definizione ricorsiva}. Questa si basa su tre componenti:
+\begin{itemize}
+    \item \textbf{Base:} Si definisce un insieme finito di stringhe iniziali che appartengono al linguaggio $L$.
+    \item \textbf{Passo Ricorsivo:} Si forniscono delle regole (funzioni) per creare nuove stringhe del linguaggio $L$ a partire da stringhe già esistenti in $L$.
+    \item \textbf{Chiusura:} Si afferma che una stringa $w$ appartiene a $L$ \textit{solo se} può essere ottenuta partendo dagli elementi di base e applicando un numero finito di volte le regole del passo ricorsivo.
+\end{itemize}
+
+
+\subsection{Espressioni Regolari}
+Un'espressione regolare è una notazione per descrivere i \textbf{linguaggi regolari}, cioè che possono essere descritti mediante espressioni regolari.. Ogni espressione regolare $r$ denota un linguaggio $L(r)$.
+
+\vspace{0.2 cm}
+
+\textbf{Definizione (Regole di base):}
+\begin{enumerate}
+    \item \textbf{$\epsilon$} è un'espressione regolare che denota il linguaggio $\{\epsilon\}$.
+    \item Se \textbf{a} è un simbolo in $\Sigma$, allora \textbf{a} è un'espressione regolare che denota il linguaggio $\{a\}$, formato da una sola stringa di lunghezza pari a uno e formata dal solo simbolo a.
+\end{enumerate}
+
+\textbf{Definizione (Regole di induzione):} Dati $r$ e $s$ come espressioni regolari:
+\begin{enumerate}
+    \item \textbf{(r)|(s)} è un'espressione regolare che denota il linguaggio $L(r) \cup L(s)$ (Unione).
+    \item \textbf{(r)(s)} è un'espressione regolare che denota il linguaggio $L(r)L(s)$ (Concatenamento).
+    \item \textbf{$(r)^*$} è un'espressione regolare che denota il linguaggio $(L(r))^*$ (Chiusura di Kleene).
+    \item \textbf{(r)} è un'espressione regolare che denota il linguaggio $L(r)$ (Parentesi per raggruppare).
+\end{enumerate}
+
+\subsection*{Esempio 3.4}
+Sia $\Sigma = \{a, b\}$.
+\begin{enumerate}
+    \item L'espressione regolare \texttt{a|b} denota il linguaggio $\{a, b\}$.
+
+    \item L'espressione regolare \texttt{(a|b)(a|b)} denota $\{aa, ab, ba, bb\}$, cioè il linguaggio di tutte le stringhe di lunghezza due sull'alfabeto $\Sigma$. Un'espressione regolare alternativa per lo stesso linguaggio è \texttt{aa|ab|ba|bb}.
+
+    \item L'espressione regolare \texttt{a*} denota il linguaggio formato da zero o più \texttt{a}, cioè $\{\epsilon, a, aa, aaa, \dots\}$.
+
+    \item L'espressione regolare \texttt{(a|b)*} denota il linguaggio formato dalle stringhe costituite da zero o più occorrenze di \texttt{a} o \texttt{b}, cioè dalle stringhe $\{\epsilon, a, b, aa, ab, ba, bb, aaa, \dots\}$. Un'espressione regolare alternativa per lo stesso linguaggio è \texttt{(a*b*)*}.
+
+    \item L'espressione regolare \texttt{a|a*b} denota il linguaggio $\{a, b, ab, aab, aaab, \dots\}$, cioè il linguaggio costituito dalla stringa \texttt{a} e da tutte le stringhe formate da zero o più \texttt{a} seguite da una occorrenza di \texttt{b}.
+\end{enumerate}
+
+\textbf{Convenzioni su Precedenza e Associatività:}
+Per ridurre il numero di parentesi, si seguono queste convenzioni:
+\begin{itemize}
+    \item L'operatore unario di chiusura \textbf{*} ha la precedenza più alta ed è associativo a sinistra.
+    \item Il concatenamento ha la seconda precedenza ed è associativo a sinistra.
+    \item L'operatore di unione \textbf{|} ha la precedenza più bassa ed è associativo a sinistra.
+\end{itemize}
+Ad esempio, $(a)|((b)^*(c))$ si può scrivere come $a|b^*c$.
+
+\subsection{Definizioni Regolari}
+
+Per una maggiore leggibilità, possiamo assegnare nomi a espressioni regolari per poi riutilizzarli come simboli. Una \textbf{definizione regolare} è una sequenza di definizioni nella forma:
+\begin{align*}
+    d_1 & \rightarrow r_1 \\
+    d_2 & \rightarrow r_2 \\
+    & \dots \\
+    d_n & \rightarrow r_n
+\end{align*}
+dove ogni $d_i$ è un nome distinto e ogni $r_i$ è un'espressione regolare definita sull'alfabeto $\Sigma \cup \{d_1, d_2, \dots, d_{i-1}\}$, per i = 1, ..., n. Questa restrizione impedisce definizioni ricorsive.
+
+\subsection{Esempio 3.5: Identificatori del C}
+Il linguaggio degli identificatori del C (stringhe di lettere, cifre e underscore, che iniziano con una lettera o underscore) può essere specificato come segue:
+\begin{Verbatim}[frame=single]
+letter_ -> A|B|...|Z|a|b|...|z|_
+digit   -> 0|1|...|9
+id      -> letter_ ( letter_ | digit )*
+\end{Verbatim}
+
+\subsection{Esempio 3.6: Costanti Numeriche}
+Le costanti numeriche senza segno (es. \texttt{5280}, \texttt{0.01234}, \texttt{6.336E4} (+ e - servono per l’esponente)) possono essere specificate in modo preciso con la seguente definizione regolare:
+\[ \Sigma = \{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ., +, -, E\} \]
+\begin{Verbatim}[frame=single]
+digit            -> 0|1|...|9
+digits           -> digit digit*
+optionalFraction -> . digits | epsilon
+optionalExponent -> ( E (+|-)? digits ) | epsilon
+number           -> digits optionalFraction optionalExponent
+\end{Verbatim}
+
+\subsection{Estensioni delle Espressioni Regolari }
+Per migliorare la leggibilità e la compattezza delle espressioni regolari, vengono introdotte delle estensioni notazionali.
+\begin{enumerate}
+    \item \textbf{Chiusura Positiva (+):} Indica "una o più occorrenze". L'espressione $r^+$ denota il linguaggio $(L(r))^+$. Vale la relazione $r^* = r^+ | \epsilon$ (operatore unario postfisso).
+
+    \item \textbf{Opzionalità (?):} Indica "zero o una occorrenza". L'espressione $r?$ è equivalente a $r|\epsilon$ (operatore unario postfisso).
+
+    \item \textbf{Classi di Caratteri ([...]):} Permettono di specificare un insieme di simboli in modo compatto. Ad esempio, \texttt{[abc]} equivale a \texttt{a|b|c}. Si possono usare intervalli, come in \texttt{[A-Za-z]} per indicare tutte le lettere maiuscole e minuscole.
+\end{enumerate}
+
+\subsection{Esempio 3.7: Definizioni Regolari con Estensioni}
+Usando le estensioni, le definizioni precedenti diventano molto più concise.
+
+\textbf{Identificatori C:}
+\begin{Verbatim}[frame=single]
+letter_ -> [A-Za-z_]
+digit   -> [0-9]
+id      -> letter_ ( letter_ | digit )*
+\end{Verbatim}
+
+\textbf{Costanti Numeriche:}
+\begin{Verbatim}[frame=single]
+digit  -> [0-9]
+digits -> digit+
+number -> digits ( . digits )? ( E [+-]? digits )?
+\end{Verbatim}
+
+\subsection{Buffering dell'Ingresso }
+
+Per velocizzare la lettura dei caratteri del programma sorgente, l'analizzatore lessicale utilizza un \textbf{buffer}. Questa tecnica è fondamentale perché spesso è necessario leggere uno o più caratteri in anticipo (\textit{lookahead}) prima di poter riconoscere un lessema, cioè la più piccola unità di linguaggio (come una parola) che possiede un significato autonomo.
+
+Ad esempio, per distinguere l'operatore `<` dall'operatore `<=`, l'analizzatore deve leggere il carattere successivo al `<`. Se è un `=`, il lessema è `<=`; altrimenti, il lessema è `<` e il carattere successivo deve essere "restituito" al flusso di input per la successiva analisi.
+
+\subsubsection{Doppio Buffer }
+Per gestire il lookahead in modo efficiente e per ridurre l'overhead delle chiamate di sistema per la lettura di un carattere alla volta, si utilizza uno schema a \textbf{doppio buffer}.
+
+\begin{itemize}
+    \item La memoria è divisa in due buffer, ciascuno di dimensione N (tipicamente la dimensione di un blocco su disco, es. 4096 byte).
+    \item I caratteri vengono letti dal file sorgente a blocchi di N byte, riempiendo un buffer alla volta.
+    \item Vengono utilizzati due puntatori:
+    \begin{itemize}
+        \item \textbf{lexemeBegin:} Punta all'inizio del lessema corrente.
+        \item \textbf{forward:} Scansiona l'input in avanti, carattere per carattere, fino a quando non viene identificato un pattern.
+    \end{itemize}
+    \item Una volta trovato un lessema, il puntatore \texttt{forward} si trova sul carattere immediatamente successivo. Il lessema è la sequenza di caratteri tra \texttt{lexemeBegin} e \texttt{forward-1}.
+    \item Quando il puntatore \texttt{forward} raggiunge la fine di un buffer, l'altro buffer viene ricaricato con i successivi N caratteri dal file sorgente.
+\end{itemize}
+
+Lo svantaggio di questo approccio è che, ad ogni avanzamento del puntatore \texttt{forward}, sono necessari due controlli: uno per verificare se si è raggiunta la fine del buffer e uno per determinare il carattere letto.
+
+\subsubsection{Sentinelle }
+Per ottimizzare il processo, si può combinare i due test in uno solo. Si inserisce un carattere speciale, detto \textbf{sentinella}, alla fine di ogni buffer.
+
+\begin{itemize}
+    \item La sentinella deve essere un carattere che non può apparire nel programma sorgente. Il carattere di fine file, \textbf{eof}, è una scelta eccellente.
+    \item Quando il puntatore \texttt{forward} incontra un \texttt{eof}, sa di essere alla fine di un buffer (o del file).
+
+    \item Di seguito l'algoritmo utilizzato per spostare il puntatore forward.
+    
+    \begin{Verbatim}[frame=single, label=Figura 3.5 - Pseudocodice per la lettura anticipata]
+switch (*forward++) {
+    case eof:
+        if (forward e' alla fine del primo buffer) {
+            ricarica il secondo buffer;
+            forward = inizio del secondo buffer;
+        }
+        else if (forward e' alla fine del secondo buffer) {
+            ricarica il primo buffer;
+            forward = inizio del primo buffer;
+        }
+        else { /* eof nel mezzo di un buffer indica la fine del file */
+            termina l'analisi;
+        }
+        break;
+
+    casi per gli altri caratteri...
+}
+\end{Verbatim}
+    
+\end{itemize}
+
+In questo modo, il codice che fa avanzare il puntatore \texttt{forward} deve testare solo il carattere corrente. Il controllo di fine buffer viene eseguito solo quando si incontra il carattere \texttt{eof}, riducendo significativamente l'overhead per ogni carattere analizzato.
+
+\vspace{1 cm}

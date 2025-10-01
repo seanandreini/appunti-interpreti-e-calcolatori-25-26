@@ -1,0 +1,135 @@
+\section{Introduzione ai Traduttori e architettura di un compilatore}
+
+\subsection{Il Compilatore}
+\begin{itemize}
+    \item È un programma che traduce un codice sorgente in un linguaggio di partenza (\textit{source language}) in un programma equivalente in un linguaggio di arrivo (\textit{target language}).
+    \item Durante la traduzione, il compilatore verifica la presenza di errori nel codice sorgente e li segnala.
+    \item Se il programma di arrivo è in linguaggio macchina eseguibile, l'utente può eseguirlo fornendo degli input per produrre un output.
+\end{itemize}
+\textbf{Schema di funzionamento:}\\
+\texttt{source program} $\rightarrow$ \fbox{Compiler} $\rightarrow$ \texttt{target program}
+
+\subsection{L'Interprete}
+\begin{itemize}
+    \item A differenza del compilatore, un interprete esegue direttamente le istruzioni del programma sorgente, passo dopo passo, a partire dagli input forniti, senza una fase di traduzione preliminare.
+\end{itemize}
+\textbf{Schema di funzionamento:}\\
+\texttt{source program + input} $\rightarrow$ \fbox{Interpreter} $\rightarrow$ \texttt{output}
+
+\subsection{Confronto: Compilatore vs. Interprete}
+\begin{itemize}
+    \item \textbf{Velocità:} I programmi compilati in linguaggio macchina sono notevolmente più veloci nell'elaborare input rispetto a quelli interpretati.
+    \item \textbf{Diagnostica Errori:} Un interprete può fornire una diagnostica degli errori migliore, poiché li rileva eseguendo il codice istruzione per istruzione.
+\end{itemize}
+
+\subsection{Sistemi Ibridi: L'esempio di Java}
+Molti linguaggi moderni, come Java, combinano compilazione e interpretazione.
+\begin{enumerate}
+    \item Il codice sorgente Java viene compilato in un linguaggio intermedio chiamato \textbf{bytecode}.
+    \item Questo bytecode viene poi interpretato da una \textbf{Java Virtual Machine (JVM)}, rendendo il codice portabile.
+    \item Per migliorare le performance, alcuni compilatori Java utilizzano tecniche \textbf{JIT (Just-In-Time)}, che traducono il bytecode in linguaggio macchina nativo immediatamente prima della sua esecuzione.
+\end{enumerate}
+
+\subsection{L'Architettura di un Compilatore}
+
+Un compilatore non è una "scatola nera", ma una "catena di montaggio" in cui il codice sorgente viene trasformato passo dopo passo. Questa catena è divisa in due sezioni principali: il \textbf{Front-end} e il \textbf{Back-end}.
+
+\begin{itemize}
+    \item \textbf{Front-end (Analisi):} La sua responsabilità è \textit{comprendere} il codice sorgente. Scompone il programma nelle sue parti costitutive, ne verifica la correttezza grammaticale e logica, e lo trasforma in una rappresentazione intermedia. Il front-end è generalmente dipendente dal linguaggio di partenza (es. il front-end per C++ è diverso da quello per Python) ma indipendente dalla macchina di destinazione.
+
+    \item \textbf{Back-end (Sintesi):} Il suo compito è \textit{costruire} il programma target. Prende la rappresentazione intermedia creata dal front-end e la traduce nel codice macchina specifico per l'architettura di destinazione (es. x86, ARM).
+\end{itemize}
+
+Tra front-end e back-end può esistere una fase di \textbf{ottimizzazione} indipendente dalla macchina, che migliora il codice intermedio per generare un programma target più efficiente.
+
+In parallelo a queste fasi, operano due componenti cruciali:
+\begin{itemize}
+    \item \textbf{La Tabella dei Simboli:} Una struttura dati, simile a un dizionario, che memorizza informazioni su tutti gli identificatori del programma (nomi di variabili, funzioni, ecc.). Ogni fase può consultarla o aggiornarla.
+    \item \textbf{Il Gestore degli Errori:} Un meccanismo che rileva e segnala errori in ogni fase del processo.
+\end{itemize}
+
+\subsection{Le Fasi del Compilatore: un Esempio Pratico}
+Analizziamo il percorso dell'istruzione \texttt{position = initial + rate * 60} attraverso le varie fasi.
+
+\subsubsection{1. Analisi Lessicale (Scanner)}
+L'analizzatore lessicale legge il flusso di caratteri e li raggruppa in "lessemi". Per ogni lessema, genera un \textbf{token}.
+\begin{itemize}
+    \item \textbf{Obiettivo:} Trasformare una sequenza di caratteri in una sequenza di "parole" dotate di significato.
+    \item \textbf{Input:} \texttt{position = initial + rate * 60}
+    \item \textbf{Output (Sequenza di Token):}
+    \begin{verbatim}
+<id, 1>
+< = >
+<id, 2>
+< + >
+<id, 3>
+< * >
+<60>
+    \end{verbatim}
+\end{itemize}
+
+\subsubsection{2. Analisi Sintattica (Parser)}
+Il parser riceve i token e ne verifica la correttezza grammaticale (sintassi), organizzandoli in una struttura gerarchica, tipicamente un \textbf{albero sintattico astratto (AST)}.
+\begin{itemize}
+    \item \textbf{Obiettivo:} Controllare la grammatica e rappresentare le relazioni tra le operazioni.
+    \item \textbf{Input:} La sequenza di token \texttt{<id, 1>, < = >, <id, 2>, ...}
+    \item \textbf{Output (Albero Sintattico):}
+    \begin{Verbatim}[frame=single, label=Albero Sintattico Astratto (AST)]
+      =
+     / \
+<id, 1>   +
+         / \
+    <id, 2>   *
+             / \
+        <id, 3> 60
+    \end{Verbatim}
+\end{itemize}
+
+\subsubsection{3. Analisi Semantica}
+Questa fase controlla che il programma abbia "senso" dal punto di vista logico, verificando ad esempio la coerenza dei tipi di dato.
+\begin{itemize}
+    \item \textbf{Obiettivo:} Verificare la correttezza logica e semantica.
+    \item \textbf{Input:} L'albero sintattico.
+    \item \textbf{Output (Albero Sintattico Annotato):} L'albero viene arricchito con informazioni sui tipi. Ad esempio, il nodo \texttt{60} viene trasformato in \texttt{inttofloat(60)} per rendere omogenea la somma se le altre variabili sono float.
+\end{itemize}
+
+\subsubsection{4. Generazione del Codice Intermedio}
+Viene creata una rappresentazione del programma in un linguaggio semplice, simile all'assembly ma indipendente dalla macchina target.
+\begin{itemize}
+    \item \textbf{Obiettivo:} Tradurre l'albero in un codice lineare e indipendente dalla macchina.
+    \item \textbf{Input:} L'albero sintattico annotato.
+    \item \textbf{Output (Codice a Tre Indirizzi):}
+    \begin{Verbatim}[frame=single, label=Codice Intermedio]
+t1 = inttofloat(60)
+t2 = id3 * t1
+t3 = id2 + t2
+id1 = t3
+    \end{Verbatim}
+\end{itemize}
+
+\subsubsection{5. Ottimizzazione del Codice}
+Questa fase analizza il codice intermedio per renderlo più efficiente (più veloce o più piccolo) senza alterarne il risultato.
+\begin{itemize}
+    \item \textbf{Obiettivo:} Migliorare le performance del codice intermedio.
+    \item \textbf{Input:} Il codice intermedio.
+    \item \textbf{Output (Codice Intermedio Ottimizzato):}
+    \begin{Verbatim}[frame=single, label=Codice Ottimizzato]
+t1 = id3 * 60.0
+id1 = id2 + t1
+    \end{Verbatim}
+\end{itemize}
+
+\subsubsection{6. Generazione del Codice Finale}
+L'ultima fase traduce il codice intermedio ottimizzato nel linguaggio macchina specifico dell'architettura di destinazione.
+\begin{itemize}
+    \item \textbf{Obiettivo:} Produrre il programma eseguibile finale.
+    \item \textbf{Input:} Il codice intermedio ottimizzato.
+    \item \textbf{Output (Codice Assembly/Macchina Target):}
+    \begin{Verbatim}[frame=single, label=Codice Assembly di Esempio]
+LDF   R2, id3      ; Carica il valore di id3 nel registro R2
+MULF  R2, #60.0    ; Moltiplica il registro R2 per 60.0
+LDF   R1, id2      ; Carica il valore di id2 nel registro R1
+ADDF  R1, R2       ; Somma R2 a R1 e salva in R1
+STF   id1, R1      ; Salva il risultato dal registro R1 in id1
+    \end{Verbatim}
+\end{itemize}
