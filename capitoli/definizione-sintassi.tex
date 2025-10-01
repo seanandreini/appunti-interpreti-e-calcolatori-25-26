@@ -1,43 +1,125 @@
-\section{Definizione della Sintassi }
+\section{Definizione della Sintassi}
 
 Per specificare la sintassi di un linguaggio, si utilizza una notazione largamente impiegata nota come \textbf{grammatica libera dal contesto} (o semplicemente grammatica). Una grammatica descrive in modo naturale la struttura gerarchica della maggior parte dei costrutti dei linguaggi di programmazione.
 
-
-\subsection{Definizione Formale di una Grammatica }
+\subsection{Definizione Formale di una Grammatica}
 Una grammatica libera dal contesto è una quadrupla $G = (V, \Sigma, P, S)$ ed è definita da quattro componenti principali:
 \begin{enumerate}
-    \item Un insieme finito di simboli \textbf{terminali}, $\Sigma$, detti anche \textbf{token}. I terminali sono le unità lessicali elementari del linguaggio (es. parole chiave, operatori, cifre).
-    
-    \item Un insieme finito di simboli \textbf{non-terminali}, $V$, detti anche \textbf{variabili sintattiche}. Ogni non-terminale rappresenta un insieme di stringhe di terminali. Per definizione, gli insiemi $V$ e $\Sigma$ sono disgiunti, ovvero $V \cap \Sigma = \emptyset$.
-    
-    \item Un insieme finito di \textbf{produzioni}, $P$. Ogni produzione ha la forma $A \rightarrow \alpha$, dove:
-    \begin{itemize}
-        \item $A$ è un non-terminale ($A \in V$) e viene detta \textbf{testa} (o lato sinistro) della produzione.
-        \item $\alpha$ è una sequenza (stringa) di terminali e/o non-terminali, $(\alpha \in (\Sigma \cup V)^*)$, e viene detta \textbf{corpo} (o lato destro) della produzione.
-    \end{itemize}
-    
-    \item Un simbolo \textbf{iniziale} (o di partenza), $S$, scelto tra i non-terminali ($S \in V$).
-
+    \item Un insieme finito di simboli \textbf{terminali}, $\Sigma$, detti anche \textbf{token}.
+    \item Un insieme finito di simboli \textbf{non-terminali}, $V$. Per definizione, $V \cap \Sigma = \emptyset$.
+    \item Un insieme finito di \textbf{produzioni}, $P$, nella forma $A \rightarrow \alpha$, dove $A \in V$ è la \textbf{testa} e $\alpha \in (\Sigma \cup V)^*$ è il \textbf{corpo}.
+    \item Un simbolo \textbf{iniziale}, $S$, scelto tra i non-terminali ($S \in V$).
 \end{enumerate}
-È detta libera dal contesto perché è possibile applicare una produzione indipendentemente da dove è A
+Una grammatica è detta "libera dal contesto" perché è possibile applicare una produzione $A \rightarrow \alpha$ indipendentemente da dove si trova il non-terminale $A$.
 
-\subsection{Derivazioni e Linguaggio Generato}
-Una grammatica viene usata per generare (o \textbf{derivare}) le stringhe di un linguaggio.
+\subsection{Definizioni Chiave}
+
 \begin{itemize}
-    \item \textbf{Derivazione diretta ($\Rightarrow$):} Data una stringa $\beta A \gamma$, dove $A$ è un non-terminale, se esiste una produzione $A \rightarrow \alpha$, possiamo sostituire $A$ con $\alpha$ per ottenere una nuova stringa. Scriviamo:
-    \[ \beta A \gamma \Rightarrow \beta \alpha \gamma \]
-   Questa operazione rappresenta un singolo passo di derivazione. 
-    
-    \item \textbf{Derivazione in zero o più passi ($\Rightarrow^*$):} Indica l'applicazione riflessiva e transitiva della derivazione diretta. Significa che una stringa $\alpha$ deriva una stringa $\gamma$ ($\alpha \Rightarrow^* \gamma$) se $\gamma$ può essere ottenuta da $\alpha$ tramite zero o più passi di derivazione. 
-    
-    \item \textbf{Derivazione in uno o più passi ($\Rightarrow^+$):} Simile a $\Rightarrow^*$, ma richiede almeno un passo di derivazione. 
-    
-    \item \textbf{Forma Sentenziale:} Si definisce \textbf{forma sentenziale} qualsiasi stringa $\beta$ che può essere derivata dal simbolo iniziale S in zero o più passi ($S \Rightarrow^* \beta$). 
-    
-    Una forma sentenziale è una "frase in costruzione": può contenere sia simboli \textbf{terminali} (le "parole" finali del linguaggio) sia simboli \textbf{non-terminali} (i "concetti" ancora da espandere).
-    
-    \item \textbf{Frase:} Una \textbf{frase} del linguaggio L(G) è una forma sentenziale composta \textit{unicamente} da simboli terminali. In altre parole, $w$ è una frase di G se e solo se $w \in \Sigma^*$ e $S \Rightarrow^+ w$.
+    \item \textbf{Derivazione Diretta ($\Rightarrow$):} 
+    Rappresenta un singolo passo di riscrittura, dove un non-terminale viene sostituito dal corpo di una sua produzione. 
+    \begin{itemize}
+        \item Il passaggio da $E$ a $E + T$ è una \textbf{derivazione diretta}, poiché abbiamo applicato la produzione $E \rightarrow E + T$.
+        \item Allo stesso modo, $T + T \Rightarrow \mathbf{id} + T$ è una derivazione diretta, dove il primo $T$ è stato sostituito usando la produzione $T \rightarrow \mathbf{id}$.
+    \end{itemize}
 
-    \item \textbf{Linguaggio Generato ($L(G)$):} Il linguaggio generato da una grammatica G è l'insieme di tutte le frasi che possono essere derivate dal simbolo iniziale. Formalmente:
-    \[ L(G) = \{ w \in \Sigma^* \mid S \Rightarrow^+ w \} \]
-  \end{itemize}
+    \item \textbf{Derivazione in zero o più passi ($\Rightarrow^*$):} 
+    Indica una sequenza completa (o parziale) di derivazioni dirette. Poiché è possibile arrivare da $E$ a $\mathbf{id} + T$ in 3 passi, possiamo scrivere:
+    \[ E \Rightarrow^* \mathbf{id} + T \]
+    La relazione è riflessiva, quindi è corretto anche scrivere $E \Rightarrow^* E$ (zero passi).
+    
+    \item \textbf{Forma Sentenziale:} 
+    È una qualsiasi stringa intermedia nel processo di derivazione che può contenere sia terminali che non-terminali. Nel nostro esempio, tutte le seguenti stringhe sono forme sentenziali:
+    \begin{itemize}
+        \item $E$ (la forma sentenziale iniziale)
+        \item $E + T$
+        \item $T + T$
+        \item $\mathbf{id} + T$
+    \end{itemize}
+
+    \item \textbf{Frase:} 
+    È una forma sentenziale che è composta \textit{unicamente} da simboli terminali. Rappresenta una stringa finale e valida del linguaggio.
+    \begin{itemize}
+        \item La stringa $\mathbf{id} + \mathbf{id}$ è una \textbf{frase}, perché è stata derivata dal simbolo iniziale e contiene solo i simboli terminali $\mathbf{id}$ e $+$.
+        \item La stringa $\mathbf{id} + T$, invece, è una forma sentenziale ma \textbf{non} è una frase, perché contiene ancora il non-terminale $T$.
+    \end{itemize}
+
+    \item \textbf{Linguaggio Generato ($L(G)$):} 
+    È l'insieme di tutte le frasi che una grammatica G può generare. La nostra frase $\mathbf{id} + \mathbf{id}$ è solo uno degli infiniti elementi del linguaggio $L(G)$ definito dalla grammatica d'esempio. Altre frasi sarebbero $\mathbf{id}$, $\mathbf{id} + \mathbf{id} + \mathbf{id}$, ecc.
+    
+\end{itemize}
+\subsection{Esempio di Grammatica e Derivazione}
+Consideriamo una grammatica per espressioni:
+\begin{itemize}
+    \item $V = \{E, I\}$
+    \item $\Sigma = \{a, b, 0, 1, +, *, (, )\}$
+    \item $S = E$
+    \item $P = \{ E \rightarrow I \mid E+E \mid E*E \mid (E) \, ; \quad I \rightarrow a \mid b \mid Ia \mid Ib \mid I0 \mid I1 \}$
+\end{itemize}
+
+Verifichiamo che la stringa \texttt{ab*(b01+ba)} appartenga al linguaggio generato:
+\begin{align*}
+E & \Rightarrow E * E \\
+  & \Rightarrow I * E \\
+  & \Rightarrow Ia * E \Rightarrow ab * E \\
+  & \Rightarrow ab * (E) \\
+  & \Rightarrow ab * (E + E) \\
+  & \Rightarrow ab * (I + E) \\
+  & \Rightarrow ab * (I0 + E) \Rightarrow ab * (I01 + E) \Rightarrow ab * (b01 + E) \\
+  & \Rightarrow ab * (b01 + I) \\
+  & \Rightarrow ab * (b01 + Ia) \Rightarrow ab * (b01 + ba)
+\end{align*}
+
+\subsection{Albero di Parsing (Parse Tree)}
+Un albero di parsing rappresenta graficamente il modo in cui una stringa del linguaggio
+può essere derivata dal simbolo iniziale.
+\begin{itemize}
+    \item \textbf{Struttura:} La radice è il simbolo iniziale. I nodi interni sono non-terminali. Le foglie sono terminali e, lette da sinistra a destra, formano la frase derivata.
+    \item \textbf{Visita:} La frase originale viene fuori facendo una visita in pre-ordine dell'albero, esaminando da sinistra la zona più "profonda".
+\end{itemize}
+\vspace{0.3 cm}
+% --- Rappresentazione testuale dell'albero di parsing ---
+\begin{Verbatim}[frame=single, label=Albero di Parsing per ab*(b01+ba)]
+                E
+                |
+        ------------------
+       |        |         |
+       E        * E
+       |                  |
+       I                 (E)
+       |                  |
+   ---------          ---------
+  |         |        |    |    |
+  I         b        E    +    E
+  |                    |         |
+  a                    I         I
+                       |         |
+                   ---------   -----
+                  |    |    |   |   |
+                  I    0    1   I   a
+                  |             |
+                  b             b
+\end{Verbatim}
+
+
+\subsection{Correttezza e Completezza}
+Una grammatica G è corretta e completa rispetto a un linguaggio L se $L(G) = L$.
+\begin{itemize}
+    \item \textbf{Correttezza:} Ogni stringa derivabile appartiene al linguaggio ($S \Rightarrow^* w \implies w \in L$).
+    \item \textbf{Completezza:} Ogni stringa del linguaggio è derivabile ($w \in L \implies S \Rightarrow^* w$).
+\end{itemize}
+
+\vspace{0.2 cm}
+\textbf{Dimostrazione di Completezza (per induzione su $|w|$):}
+\begin{itemize}
+    \item \textbf{Base:} Se $|w|=0$, allora $w=\epsilon$. Se $\epsilon \in L(G)$, allora deve esistere $S \Rightarrow^* \epsilon$.
+    \item \textbf{Passo Induttivo:} Supponiamo che per ogni stringa $w$ con $|w| \le n$ valga la tesi. Se $|w|=n+1$, allora $w$ sarà nella forma $u \text{ op } v$ o simile, e per ipotesi induttiva esisteranno le derivazioni per $u$ e $v$.
+\end{itemize}
+
+\vspace{0.1 cm}
+\textbf{Dimostrazione di Correttezza (induzione sul numero di passi della derivazione):}
+\begin{itemize}
+    \item \textbf{Base:} Se la derivazione ha 1 passo ($S \Rightarrow^1 w$), si dimostra che $w \in L$. Ad esempio, se le produzioni con un passo sono $S \rightarrow \epsilon \mid 0 \mid 1$, allora le stringhe $\epsilon, 0, 1$ appartengono al linguaggio.
+    
+    \item \textbf{Passo Induttivo:} Si assume che per ogni derivazione di lunghezza $\le n$ la tesi sia valida. Per una derivazione di $n+1$ passi, si dimostra che anche la stringa risultante appartiene al linguaggio, basandosi sul fatto che è ottenuta da una stringa derivabile in $n$ passi. \\
+    Esempio: $S \Rightarrow 0S0 \Rightarrow^* 0x0$. Se per ipotesi induttiva $x \in L$, e la regola di costruzione del linguaggio prevede che $0x0$ sia una stringa valida, allora la tesi è dimostrata.
+\end{itemize}
