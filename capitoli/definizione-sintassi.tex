@@ -46,6 +46,12 @@ Una grammatica è detta "libera dal contesto" perché è possibile applicare una
     \item \textbf{Linguaggio Generato ($L(G)$):} 
     È l'insieme di tutte le frasi che una grammatica G può generare. La nostra frase $\mathbf{id} + \mathbf{id}$ è solo uno degli infiniti elementi del linguaggio $L(G)$ definito dalla grammatica d'esempio. Altre frasi sarebbero $\mathbf{id}$, $\mathbf{id} + \mathbf{id} + \mathbf{id}$, ecc.
     
+    \item La differenza tra \textbf{derivazione sinistra} e \textbf{derivazione destra} riguarda l'ordine con cui vengono sostituiti i non-terminali in una forma sentenziale. Per una data grammatica, entrambe le derivazioni producono lo stesso albero di parsing, ma lo costruiscono in un ordine diverso.
+    \begin{itemize}
+        \item \textbf{Derivazione Sinistra (Leftmost Derivation):} A ogni passo della derivazione, viene sempre espanso il \textbf{non-terminale più a sinistra} presente nella forma sentenziale. .
+        
+        \item \textbf{Derivazione Destra (Rightmost Derivation):} A ogni passo della derivazione, viene sempre espanso il \textbf{non-terminale più a destra}.
+    \end{itemize}
 \end{itemize}
 \subsection{Esempio di Grammatica e Derivazione}
 Consideriamo una grammatica per espressioni:
@@ -123,3 +129,219 @@ Una grammatica G è corretta e completa rispetto a un linguaggio L se $L(G) = L$
     \item \textbf{Passo Induttivo:} Si assume che per ogni derivazione di lunghezza $\le n$ la tesi sia valida. Per una derivazione di $n+1$ passi, si dimostra che anche la stringa risultante appartiene al linguaggio, basandosi sul fatto che è ottenuta da una stringa derivabile in $n$ passi. \\
     Esempio: $S \Rightarrow 0S0 \Rightarrow^* 0x0$. Se per ipotesi induttiva $x \in L$, e la regola di costruzione del linguaggio prevede che $0x0$ sia una stringa valida, allora la tesi è dimostrata.
 \end{itemize}
+
+
+\subsection{Grammatiche Regolari}
+
+Le grammatiche regolari sono un sottoinsieme delle grammatiche libere dal contesto con regole di produzione più restrittive.
+
+\begin{itemize}
+    \item \textbf{Produzioni Regolari Destre:} Hanno la forma $X \rightarrow aY$ oppure $X \rightarrow a$, dove $X, Y \in V$ (non-terminali) e $a \in \Sigma$ (un terminale). È permessa anche la produzione $X \rightarrow \epsilon$.
+    
+    \item \textbf{Produzioni Regolari Sinistre:} Hanno la forma $X \rightarrow Ya$ oppure $X \rightarrow a$.
+\end{itemize}
+
+A differenza delle grammatiche libere dal contesto (dove una produzione è $A \rightarrow \alpha$ con $\alpha$ qualsiasi), in una grammatica regolare il non-terminale, se presente, può trovarsi solo all'inizio o alla fine del corpo della produzione, e può essercene al massimo uno.
+
+Una grammatica è regolare se tutte le sue produzioni sono solo regolari destre o solo regolari sinistre.
+
+\subsubsection{Forma delle Frasi}
+Le frasi generate da una grammatica regolare sono sempre della forma $S \Rightarrow^* wX$, dove $w \in \Sigma^*$ e $X \in V$ (o $X$ è assente). Questo significa che ad ogni passo viene "consumato" un terminale e il non-terminale (se presente) viene spinto alla fine della forma sentenziale.
+
+
+\subsubsection{Esempi}
+
+\begin{itemize}
+
+    \item \textbf{Linguaggio delle stringhe di lunghezza pari} \\
+    $L = \{w \in \{a,b\}^* \mid |w| \text{ è pari}\}$.
+    In questa grammatica, S genera stringhe di lunghezza pari e D genera stringhe di lunghezza dispari.
+    \begin{Verbatim}[frame=single]
+S -> aD | bD | epsilon
+D -> aS | bS
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio delle stringhe che contengono 'aaa'} \\
+    $L = \{w \in \{a,b\}^* \mid w \text{ contiene la sottostringa 'aaa'}\}$.
+    Equivalente all'espressione regolare $(a|b)^*aaa(a|b)^*$.
+    \begin{itemize}
+        \item S: genera stringhe che non contengono 'aaa' e finiscono con 'b' (o la stringa vuota).
+        \item A: genera stringhe che non contengono 'aaa' e finiscono con 'a'.
+        \item B: genera stringhe che non contengono 'aaa' e finiscono con 'aa'.
+        \item C: genera stringhe che contengono 'aaa'.
+    \end{itemize}
+    \begin{Verbatim}[frame=single]
+S -> bS | aA | epsilon
+A -> aB | bS
+B -> aC | bS
+C -> aC | bC
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio delle stringhe che non contengono 'aaa'} \\
+    $L = \{w \in \{a,b\}^* \mid w \text{ non contiene la sottostringa 'aaa'}\}$.
+    \begin{Verbatim}[frame=single]
+S -> aA | bS | epsilon
+A -> aB | bS | epsilon
+B -> bS | epsilon
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio delle stringhe che non iniziano con 'aaa'} \\
+    $L = \{w \in \{a,b\}^* \mid w \text{ non ha 'aaa' come prefisso}\}$.
+    \begin{Verbatim}[frame=single]
+S -> aA | bC | epsilon
+A -> aB | bC | epsilon
+B -> bC | epsilon
+C -> aC | bC | epsilon
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio delle stringhe che non contengono 'aba'} \\
+     $L = \{w \in \{a,b\}^* \mid w \text{ non contiene la sottostringa 'aba'}\}$.
+    \begin{itemize}
+        \item S: la stringa finisce con 'b' o e' vuota.
+        \item A: la stringa finisce con 'a'.
+        \item B: la stringa finisce con 'ab'.
+    \end{itemize}
+    \begin{Verbatim}[frame=single]
+S -> aA | bS | epsilon
+A -> aA | bB
+B -> aA | bS
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio delle stringhe con numero pari di 'a' E numero pari di 'b'} \\
+    $L = \{w \in \{a,b\}^* \mid (\#_a(w) \text{ è pari}) \land (\#_b(w) \text{ è pari})\}$.
+    \begin{itemize}
+        \item S: pari 'a', pari 'b'.
+        \item A: dispari 'a', pari 'b'.
+        \item B: pari 'a', dispari 'b'.
+        \item C: dispari 'a', dispari 'b'.
+    \end{itemize}
+    \begin{Verbatim}[frame=single]
+S -> aA | bB | epsilon
+A -> aS | bC
+B -> aC | bS
+C -> aB | bA
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio delle stringhe con numero pari di 'a' O numero dispari di 'b'} \\
+    $L = \{w \in \{a,b\}^* \mid (\#_a(w) \text{ è pari}) \lor (\#_b(w) \text{ è dispari})\}$.
+    \begin{Verbatim}[frame=single]
+S -> aA | bB | epsilon
+A -> aS | bC
+B -> aC | bS | epsilon
+C -> aB | bA | epsilon
+    \end{Verbatim}
+
+
+\end{itemize}
+\subsection{Gerarchia di Chomsky}
+
+La \textbf{Gerarchia di Chomsky} riguarda la classificazione delle grammatiche. Si differenziano per il tipo di produzioni.
+
+\begin{enumerate}
+    \item \textbf{Grammatiche senza restrizioni (a struttura di frase) - Tipo 0:} Le produzioni hanno la forma $\alpha \rightarrow \beta$, dove $\alpha \in (V \cup \Sigma)^*$ e $\beta \in (V \cup \Sigma)^*$. Ha senso chiedere che $\alpha$ contenga almeno un non terminale: $\alpha \in (V \cup \Sigma)^* V (V \cup \Sigma)^*$.
+    \item \textbf{Grammatiche contestuali - Tipo 1:} Le produzioni possono avere queste forme:
+    \begin{enumerate}
+        \item $\alpha \rightarrow \beta$, dove $\alpha, \beta \in (V \cup \Sigma)^+$, e inoltre $|\alpha| \le |\beta|$.
+        \item $\alpha_1 A \alpha_2 \rightarrow \alpha_1 \beta \alpha_2$, con $A \in V$, $\alpha_1, \alpha_2, \beta \in (V \cup \Sigma)^*$, e $\beta \neq \epsilon$.
+    \end{enumerate}
+    \item \textbf{Grammatiche non contestuali (context-free) - Tipo 2}
+    \item \textbf{Grammatiche regolari - Tipo 3}
+\end{enumerate}
+
+
+
+Un linguaggio formale appartiene a un determinato \textbf{tipo} se è generato da una grammatica di quel tipo. Se un linguaggio è di tipo `i`, ma non esiste nessuna grammatica di tipo `i+1` che lo genera, allora il linguaggio è propriamente di tipo `i`.
+
+I linguaggi generati dalle grammatiche dipendono dal tipo della gerarchia a cui appartengono:
+
+\begin{description}
+    \item[Tipo 0 - Grammatiche senza restrizioni:] danno luogo ai cosiddetti \textbf{linguaggi ricorsivamente enumerabili}.
+    \item[Tipo 1 - Grammatiche contestuali (context-sensitive):] danno luogo ai \textbf{linguaggi contestuali}.
+    \item[Tipo 2 - Grammatiche non contestuali (context-free):] danno luogo ai \textbf{linguaggi non contestuali}.
+    \item[Tipo 3 - Grammatiche regolari:] danno luogo ai \textbf{linguaggi regolari}.
+\end{description}
+
+Questa classificazione forma una gerarchia di inclusione: ogni linguaggio regolare è anche libero dal contesto, ogni linguaggio libero dal contesto è anche contestuale, e così via.
+
+\subsubsection{Macchine Astratte Riconoscitrici}
+Per ogni tipo di linguaggio esiste una macchina astratta (un automa) che serve per stabilire se una data stringa appartiene a quel linguaggio.
+\begin{description}
+    \item[Tipo 0:] Macchina di Turing
+    \item[Tipo 1:] Automa linearmente limitato 
+    \item[Tipo 2:] Automa a pila 
+    \item[Tipo 3:] Automa a stati finiti 
+\end{description}
+Un automa di un certo livello può sempre riconoscere i linguaggi dei livelli inferiori. Ad esempio, un automa a pila (Tipo 2) può riconoscere anche i linguaggi regolari (Tipo 3).
+
+\subsection{Esempi di Linguaggi e Grammatiche}
+\begin{itemize}
+    \item \textbf{Linguaggio $L = \{a^n b^m \mid n, m \ge 0\}$} \\
+    Nota: La grammatica $S \rightarrow aSb \mid \epsilon$ genera in realtà $\{a^n b^n\}$. La grammatica corretta per $\{a^n b^m\}$ è:
+    \begin{Verbatim}[frame=single]
+S -> AB
+A -> aA | epsilon
+B -> bB | epsilon
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio $L = \{w \in \{a,b\}^* \mid |w|_a = |w|_b\}$} (stringhe con lo stesso numero di 'a' e 'b')
+    \begin{Verbatim}[frame=single]
+S -> epsilon | aSbS | bSaS
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio dei palindromi}
+    \begin{Verbatim}[frame=single]
+S -> epsilon | 0 | 1 | 0S0 | 1S1
+    \end{Verbatim}
+    
+    \item \textbf{Linguaggio $L = \{a^n b^m c^k \mid n, k \ge 0, m > 0\}$}
+    \begin{Verbatim}[frame=single]
+S -> AC
+A -> aA | epsilon
+B -> bBC | bC
+C -> cC | epsilon
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio $L = \{a^n b^n c^n \mid n \ge 0\}$} \\
+    Questo linguaggio \textbf{non è libero dal contesto} perché non è possibile "contare" `n` per tutti e tre i simboli con un automa a pila.
+
+
+    \item \textbf{Linguaggio $L = \{a^n b^n c^k d^k \mid n,m,k,j \ge 0\}$}
+    \begin{Verbatim}[frame=single]
+S -> AB
+A -> aAb | epsilon
+B -> cBd | epsilon
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio $L = \{a^n b^k c^k d^n \mid n,k \ge 0\}$}
+    \begin{Verbatim}[frame=single]
+S -> aSd | aAd
+A -> bAc | bc
+    \end{Verbatim}
+
+    \item \textbf{Linguaggio $L = \{a^n b^k c^{2n+k} \mid n,k \ge 0\}$}
+    \begin{Verbatim}[frame=single]
+S -> aScc | B
+B -> bBc | epsilon
+    \end{Verbatim}
+    Nota: La grammatica negli appunti sembra avere un errore. Una versione corretta potrebbe essere la precedente.
+
+    \item \textbf{Esempio di Derivazione} \\
+    Grammatica per $a^n b^m c^m$:
+    \begin{Verbatim}[frame=single]
+S -> aSBC | aBC
+CB -> BC
+bB -> bb
+bC -> bc
+cC -> cc
+    \end{Verbatim}
+    Derivazione di `aaabbbccc`:
+    \begin{align*}
+    S & \Rightarrow aSBC \Rightarrow aaBCBC \\
+      & \Rightarrow aaBbCBC \Rightarrow aaBbBCC \\
+      & \Rightarrow aaabbCC \Rightarrow aaabbCbC \\
+      & \Rightarrow aaabbBCC \Rightarrow aaabbbCCC \\
+      & \Rightarrow aaabbbcCC \Rightarrow aaabbbccc
+    \end{align*}
+
+\end{itemize}
+
