@@ -1,0 +1,109 @@
+\section{Automi a Stati Finiti}
+
+\subsection{Automa a Stati Finiti Deterministico (DFA)}
+Un automa a stati finiti deterministico (DFA) è definito formalmente come una quintupla $A = (Q, \Sigma, \delta, q_0, F)$:
+\begin{itemize}
+    \item $Q$: un insieme finito di stati.
+    \item $\Sigma$: un insieme finito di simboli di input (l'alfabeto).
+    \item $\delta$: la funzione di transizione, definita come $\delta: (Q \times \Sigma) \rightarrow Q$. Per una coppia (stato, simbolo) restituisce un singolo stato di arrivo (es. $\delta(q_i, a) = q_j$).
+    \item $q_0 \in Q$: lo stato iniziale.
+    \item $F \subseteq Q$: l'insieme degli stati finali o di accettazione.
+\end{itemize}
+
+\subsection{Linguaggio Accettato e Configurazione}
+Il linguaggio accettato da un automa A, denotato con $L(A)$, è l'insieme di tutte le stringhe $w$ che vengono accettate dall'automa.
+\[ L(A) = \{ w \in \Sigma^* \mid w \text{ è accettata da A} \} \]
+Una \textbf{configurazione istantanea} descrive lo stato dell'automa in un dato momento e consiste in una coppia `[stato attuale, stringa ancora da leggere]`.
+\begin{itemize}
+    \item Esempio: $[q_i, aw] \rightarrow [q_j, w]$ se $\delta(q_i, a) = q_j$.
+\end{itemize}
+
+\subsection{Esempio Pratico: Riconoscimento di "11"}
+Consideriamo un automa che riconosce stringhe sull'alfabeto $\{0, 1\}$ che contengono due '1' consecutivi.
+\begin{itemize}
+    \item $Q = \{q_0, q_1, q_2\}$
+    \item $\Sigma = \{0, 1\}$
+    \item $q_0$ è lo stato iniziale.
+    \item $F = \{q_2\}$
+    \item La funzione di transizione $\delta$ è definita dalla seguente tabella:
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+    \hline
+    \textbf{Stato} & \textbf{0} & \textbf{1} \\
+    \hline
+    $q_0$ & $q_0$ & $q_1$ \\
+    \hline
+    $q_1$ & $q_0$ & $q_2$ \\
+    \hline
+    $q_2$ & $q_2$ & $q_2$ \\
+    \hline
+\end{tabular}
+\end{center}
+
+\textbf{Computazione per la stringa $w = 10110$:}
+\[ [q_0, 10110] \rightarrow [q_1, 0110] \rightarrow [q_0, 110] \rightarrow [q_1, 10] \rightarrow [q_2, 0] \rightarrow [q_2, \epsilon] \]
+Poiché l'automa termina nello stato $q_2$, che è uno stato finale, la stringa $w=10110$ è accettata.
+
+\begin{center}
+    \begin{tikzpicture}[shorten >=1pt, node distance=2.5cm, on grid, auto] 
+       \node[state, initial] (S) {S}; 
+       \node[state] (A) [right=of S] {A}; 
+       \node[state] (B) [right=of A] {B};
+       \node[state, accepting] (C) [right=of B] {C};
+       
+       \path[->] 
+        (S) edge [loop above] node {b} (S)
+            edge node {a} (A)
+        (A) edge node {a} (B)
+            edge [bend left=60] node {b} (S)
+        (B) edge node {a} (C)
+            edge [bend left=60] node {b} (S)
+        (C) edge [loop above] node {a,b} (C);
+    \end{tikzpicture}
+    \end{center}
+
+\subsection{Complemento di un Linguaggio}
+\textbf{Teorema:} Se $A = (Q, \Sigma, \delta, q_0, F)$ è un DFA che accetta il linguaggio $L(A)$, allora l'automa $A' = (Q, \Sigma, \delta, q_0, Q-F)$ accetta il linguaggio complemento $\Sigma^* - L(A)$.
+\begin{itemize}
+    \item In pratica, per ottenere un automa che accetta il linguaggio complemento, è sufficiente scambiare gli stati finali con quelli non finali.
+\end{itemize}
+
+\subsection{Esempio: Riconoscimento di Stringhe con Parità Pari}
+Consideriamo un automa per riconoscere il linguaggio delle stringhe su $\{a,b\}$ con un numero pari di 'a' e un numero pari di 'b'.
+
+\subsubsection{Definizione dei Non-Terminali/Stati}
+I non-terminali della grammatica corrispondono agli stati dell'automa e tengono traccia della parità dei simboli letti.
+\begin{itemize}
+    \item \textbf{S}: numero pari di 'a' e numero pari di 'b' (stato iniziale e finale).
+    \item \textbf{A}: numero dispari di 'a' e numero pari di 'b'.
+    \item \textbf{B}: numero pari di 'a' e numero dispari di 'b'.
+    \item \textbf{C}: numero dispari di 'a' e numero dispari di 'b'.
+\end{itemize}
+
+\subsubsection{Diagramma di Transizione}
+Il diagramma mostra come l'automa cambia stato in base al simbolo letto.
+
+\begin{center}
+\begin{tikzpicture}[shorten >=1pt, node distance=3cm, on grid, auto] 
+   \node[state, initial, accepting] (S) {S}; 
+   \node[state] (A) [above right=of S] {A}; 
+   \node[state] (B) [below right=of S] {B};
+   \node[state] (C) [below right=of A] {C};
+   
+   \path[->] 
+    (S) edge [bend left] node {a} (A)
+        edge [bend right] node [swap] {b} (B)
+    (A) edge [bend left] node {a} (S)
+        edge node {b} (C)
+    (B) edge [bend right] node [swap] {a} (C)
+        edge [bend right] node [swap] {b} (S)
+    (C) edge node {b} (A)
+        edge [bend right] node [swap] {a} (B);
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Funzione di Transizione per NFA}
+\[ \delta: Q \times (\Sigma \cup \{\epsilon\}) \rightarrow 2^Q \]
+Questo significa che per uno stato in $Q$ e un simbolo (o $\epsilon$), la funzione restituisce un \textit{insieme} di possibili stati successivi (indicato da $2^Q$, l'insieme delle parti di Q). 
