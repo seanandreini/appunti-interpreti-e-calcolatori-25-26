@@ -47,63 +47,215 @@ Consideriamo un automa che riconosce stringhe sull'alfabeto $\{0, 1\}$ che conte
 Poiché l'automa termina nello stato $q_2$, che è uno stato finale, la stringa $w=10110$ è accettata.
 
 \begin{center}
-    \begin{tikzpicture}[shorten >=1pt, node distance=2.5cm, on grid, auto] 
-       \node[state, initial] (S) {S}; 
-       \node[state] (A) [right=of S] {A}; 
-       \node[state] (B) [right=of A] {B};
-       \node[state, accepting] (C) [right=of B] {C};
-       
-       \path[->] 
-        (S) edge [loop above] node {b} (S)
-            edge node {a} (A)
-        (A) edge node {a} (B)
-            edge [bend left=60] node {b} (S)
-        (B) edge node {a} (C)
-            edge [bend left=60] node {b} (S)
-        (C) edge [loop above] node {a,b} (C);
-    \end{tikzpicture}
+    \begin{tikzpicture}[shorten >=1pt, node distance=2.5cm, on grid, auto]
+        % Stati
+        \node[state, initial] (q0) {$q_0$};
+        \node[state] (q1) [right=of q0] {$q_1$};
+        \node[state, accepting, double] (q2) [right=of q1] {$q_2$};
+      
+        % Transizioni
+        \path[->]
+          (q0) edge [loop above] node {0} ()
+          (q0) edge node {1} (q1)
+          (q1) edge [bend left] node {0} (q0)
+          (q1) edge node {1} (q2)
+          (q2) edge [loop above] node {0,1} ();
+      \end{tikzpicture} 
     \end{center}
+    
+    \subsection{Esempio Pratico: Riconoscimento di tre a consecutive: "aaa"}
+    \begin{center}
+    \begin{tikzpicture}[shorten >=1pt, node distance=2.2cm, on grid, auto]
+        \node[state, initial] (S1) {S};
+        \node[state] (A1) [right=of S1] {A};
+        \node[state] (B1) [right=of A1] {B};
+        \node[state, accepting, double] (C1) [right=of B1] {C};
+      
+        \path[->]
+          (S1) edge [loop above] node {b} ()
+               edge node {a} (A1)
+               edge [bend left=55] node {b} (B1)
+          (A1) edge node {a} (B1)
+               edge [bend left=55] node {b} (S1)
+          (B1) edge node {a} (C1)
+          (C1) edge [loop right] node {a,b} ();
+      \end{tikzpicture}
+    \end{center}
+      
+    \subsection{Esempio Pratico: Riconoscimento di tre a non consecutive: "aaa"}
+      \begin{center}
+      \begin{tikzpicture}[shorten >=1pt, node distance=2.2cm, on grid, auto]
+        \node[state, initial, accepting, double] (S2) {S};
+        \node[state, accepting, double] (A2) [right=of S2] {A};
+        \node[state, accepting, double] (B2) [right=of A2] {B};
+        \node[state] (C2) [right=of B2] {C};
+      
+        \path[->]
+          (S2) edge [loop above] node {b} ()
+               edge node {a} (A2)
+               edge [bend left=55] node {b} (B2)
+          (A2) edge node {a} (B2)
+               edge [bend left=55] node {b} (S2)
+          (B2) edge node {a} (C2)
+          (C2) edge [loop right] node {a,b} ();
+      \end{tikzpicture}
+    \end{center}
+    
+    \subsection{Complemento di un Linguaggio}
+    \textbf{Teorema:} Se $A = (Q, \Sigma, \delta, q_0, F)$ è un DFA che accetta il linguaggio $L(A)$, allora l'automa $A' = (Q, \Sigma, \delta, q_0, Q-F)$ accetta il linguaggio complemento $\Sigma^* - L(A)$.
+    \begin{itemize}
+        \item In pratica, per ottenere un automa che accetta il linguaggio complemento, è sufficiente scambiare gli stati finali con quelli non finali.
+    \end{itemize}
+    
+    \subsection{Esempio: Riconoscimento di Stringhe con numero di a  Pari}
+    Consideriamo un automa per riconoscere il linguaggio delle stringhe su $\{a,b\}$ con un numero pari di 'a' e un numero pari di 'b'.
+    \\
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \begin{tabular}{|c|c|c|}
+        \hline
+             & $|w|_a$ & $|w|_b$ \\
+        \hline
+         S & pari    & pari    \\
+        \hline
+         A & dispari & pari    \\
+        \hline
+         B & pari    & dispari \\
+        \hline
+         C & dispari & dispari \\
+        \hline
+        \end{tabular}
+        \end{minipage}%
+        \hfill
+        \begin{minipage}{0.52\textwidth}
+        \centering
+        \begin{tikzpicture}[node distance=2cm, on grid, auto]
+          \node[state, initial, accepting, double] (S) {S};
+          \node[state] (A) [above right=of S] {A};
+          \node[state] (B) [below right=of S] {B};
+          \node[state] (C) [right=of B] {C};
+        
+          \path[->] 
+          (S) edge [bend left] node {a} (A)
+              edge [bend right] node [swap] {b} (B)
+          (A) edge [bend left] node {a} (S)
+              edge node {b} (C)
+          (B) edge [bend right] node [swap] {a} (C)
+              edge [bend right] node [swap] {b} (S)
+          (C) edge node {b} (A)
+              edge [bend right] node [swap] {a} (B);
+        \end{tikzpicture}
+        \end{minipage}
 
-\subsection{Complemento di un Linguaggio}
-\textbf{Teorema:} Se $A = (Q, \Sigma, \delta, q_0, F)$ è un DFA che accetta il linguaggio $L(A)$, allora l'automa $A' = (Q, \Sigma, \delta, q_0, Q-F)$ accetta il linguaggio complemento $\Sigma^* - L(A)$.
-\begin{itemize}
-    \item In pratica, per ottenere un automa che accetta il linguaggio complemento, è sufficiente scambiare gli stati finali con quelli non finali.
-\end{itemize}
+\vspace{900pt}
 
-\subsection{Esempio: Riconoscimento di Stringhe con Parità Pari}
-Consideriamo un automa per riconoscere il linguaggio delle stringhe su $\{a,b\}$ con un numero pari di 'a' e un numero pari di 'b'.
-
-\subsubsection{Definizione dei Non-Terminali/Stati}
-I non-terminali della grammatica corrispondono agli stati dell'automa e tengono traccia della parità dei simboli letti.
-\begin{itemize}
-    \item \textbf{S}: numero pari di 'a' e numero pari di 'b' (stato iniziale e finale).
-    \item \textbf{A}: numero dispari di 'a' e numero pari di 'b'.
-    \item \textbf{B}: numero pari di 'a' e numero dispari di 'b'.
-    \item \textbf{C}: numero dispari di 'a' e numero dispari di 'b'.
-\end{itemize}
-
-\subsubsection{Diagramma di Transizione}
-Il diagramma mostra come l'automa cambia stato in base al simbolo letto.
-
-\begin{center}
-\begin{tikzpicture}[shorten >=1pt, node distance=3cm, on grid, auto] 
-   \node[state, initial, accepting] (S) {S}; 
-   \node[state] (A) [above right=of S] {A}; 
-   \node[state] (B) [below right=of S] {B};
-   \node[state] (C) [below right=of A] {C};
-   
-   \path[->] 
-    (S) edge [bend left] node {a} (A)
-        edge [bend right] node [swap] {b} (B)
-    (A) edge [bend left] node {a} (S)
-        edge node {b} (C)
-    (B) edge [bend right] node [swap] {a} (C)
-        edge [bend right] node [swap] {b} (S)
-    (C) edge node {b} (A)
-        edge [bend right] node [swap] {a} (B);
-\end{tikzpicture}
-\end{center}
-
+        \subsection{Altri Esempi di DFA}
+        %--- Esempio 1: stringa che non inizia con "aaa"
+        \textbf{Esempio:} stringa che non inizia con \texttt{aaa}
+        
+        \begin{tikzpicture}[node distance=2cm, auto]
+          \node[state, initial, accepting, double] (S) {S};
+          \node[state] (A) [right=of S] {A};
+          \node[state] (B) [below=of A] {B};
+          \node[state] (C) [left=of B] {C};
+          \node[state] (D) [right=of B] {D};
+        
+          \path[->]
+            (S) edge node{a} (A)
+                edge [bend left] node{b} (C)
+            (A) edge [bend left] node{b} (C)
+                edge node{a} (B)
+            (C) edge [loop below] node{a,b} ()
+                edge node{b} (B)
+            (B) edge node{a} (D)
+                edge [bend left] node{b} (C)
+            (D) edge [loop right] node{a,b} ();
+        \end{tikzpicture}
+        
+        \vspace{1em}
+        
+        %--- Esempio 2: stringa che contiene "aba"
+        \textbf{Esempio:} stringa che contiene \texttt{aba}
+        
+        \begin{tikzpicture}[node distance=2cm, auto]
+          \node[state, initial] (S2) {S};
+          \node[state] (A2) [right=of S2] {A};
+          \node[state] (B2) [right=of A2] {B};
+          \node[state, accepting, double] (C2) [right=of B2] {C};
+        
+          \path[->]
+            (S2) edge node{a} (A2)
+                 edge [loop above] node{a,b} (S2)
+            (A2) edge [loop above] node{a} ()
+                 edge node{b} (B2)
+            (B2) edge node{a} (C2)
+                 edge [bend left=40] node{b} (S2)
+            (C2) edge [loop above] node{a,b} ();
+        \end{tikzpicture}
+        
+        \vspace{1em}
+        
+        %--- Esempio 3: ogni a preceduta o seguita da b
+        \textbf{Esempio:} ogni \texttt{a} è preceduta o seguita da \texttt{b}
+        
+        \begin{tikzpicture}[node distance=2cm, auto]
+          \node[state, initial, accepting, double] (S3) {S};
+          \node[state] (A3) [right=of S3] {A};
+          \node[state, accepting, double] (B3) [below=of S3] {B};
+          \node[state] (C3) [right=of A3] {C};
+        
+          \path[->]
+            (S3) edge [loop above] node{b} ()
+                 edge node{a} (A3)
+                 edge [bend left] node{a} (B3)
+            (A3) edge node{a} (C3)
+            (B3) edge [loop left] node{b} ()
+                 edge node{a} (S3)
+            (C3) edge [loop right] node{a,b} ();
+        \end{tikzpicture}
+        
+        \vspace{1em}
+        
+        %--- Esempio 4: il numero di a e b è pari
+        \textbf{Esempio:} il numero di \texttt{a} e di \texttt{b} è pari
+        
+        \begin{minipage}{0.4\textwidth}
+        \centering
+        \begin{tabular}{|c|c|c|}
+        \hline
+             & $|w|_a$ & $|w|_b$ \\
+        \hline
+         S & pari    & pari    \\
+        \hline
+         A & dispari & pari    \\
+        \hline
+         B & pari    & dispari \\
+        \hline
+         C & dispari & dispari \\
+        \hline
+        \end{tabular}
+        \end{minipage}%
+        \hfill
+        \begin{minipage}{0.58\textwidth}
+        \centering
+        \begin{tikzpicture}[node distance=2cm, on grid, auto]
+          \node[state, initial, accepting, double] (S4) {S};
+          \node[state] (A4) [above right=of S4] {A};
+          \node[state] (B4) [below right=of S4] {B};
+          \node[state] (C4) [right=of B4] {C};
+        
+          \path[->]
+            (S4) edge node{a} (A4)
+                 edge node [swap]{b} (B4)
+            (A4) edge [bend left] node{a} (S4)
+                 edge node{b} (C4)
+            (B4) edge node{a} (C4)
+                 edge [bend left] node{b} (S4)
+            (C4) edge [bend left] node{a} (B4)
+                 edge [bend left] node{b} (A4);
+        \end{tikzpicture}
+        \end{minipage}
+        
 \subsubsection{Funzione di Transizione per NFA}
 \[ \delta: Q \times (\Sigma \cup \{\epsilon\}) \rightarrow 2^Q \]
 Questo significa che per uno stato in $Q$ e un simbolo (o $\epsilon$), la funzione restituisce un \textit{insieme} di possibili stati successivi (indicato da $2^Q$, l'insieme delle parti di Q). 
