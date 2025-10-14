@@ -259,3 +259,438 @@ Poiché l'automa termina nello stato $q_2$, che è uno stato finale, la stringa 
 \subsubsection{Funzione di Transizione per NFA}
 \[ \delta: Q \times (\Sigma \cup \{\epsilon\}) \rightarrow 2^Q \]
 Questo significa che per uno stato in $Q$ e un simbolo (o $\epsilon$), la funzione restituisce un \textit{insieme} di possibili stati successivi (indicato da $2^Q$, l'insieme delle parti di Q). 
+
+\subsection{Automi a stati Finiti Non-Deterministici (NFA)}
+
+Un \textbf{automa non-deterministico a stati finiti} (NFA) è la quintupla
+\(A=(S,\Sigma,\delta,s_0,F)\) con:
+\begin{enumerate}
+  \item un insieme finito di stati \(S\);
+  \item un insieme di simboli d'ingresso \(\Sigma\) (alfabeto); si assume che la stringa nulla \(\varepsilon\) non sia in \(\Sigma\);
+  \item una funzione di transizione \(\delta : S \times (\Sigma \cup \{\varepsilon\}) \to 2^{S}\) che restituisce, per stato e simbolo, un insieme di stati successivi;
+  \item uno stato \(s_0 \in S\) (\emph{stato iniziale});
+  \item un sottoinsieme \(F \subseteq S\) (\emph{stati di accettazione}).
+\end{enumerate}
+\vspace{16pt}
+Sia NFA che DFA si rappresentano con un \emph{grafo di transizione}: nodi = stati, archi etichettati = transizioni; esiste un arco etichettato \(a\) da \(s\) a \(t\) se e solo se \(t \in \delta(s,a)\).
+Per gli NFA valgono queste particolarità:
+\begin{enumerate}
+  \item uno stesso simbolo può etichettare più archi uscenti dallo stesso stato verso stati diversi;
+  \item un arco può essere etichettato con la stringa vuota \(\varepsilon\), da sola o insieme ad altri simboli dell’alfabeto.
+\end{enumerate}
+
+% Automa NFA per (a|b)*abb
+\begin{center}
+    \begin{tikzpicture}[node distance=2cm, auto]
+      \node[state, initial] (0) {0};
+      \node[state] (1) [right=of 0] {1};
+      \node[state] (2) [right=of 1] {2};
+      \node[state, accepting, double] (3) [right=of 2] {3};
+      \path[->]
+        (0) edge [loop above] node {a,b} ()
+            edge node {a} (1)
+        (1) edge node {b} (2)
+        (2) edge node {b} (3);
+    \end{tikzpicture}
+    \\
+    \footnotesize Figura 3.19 \quad Un automa finito non-deterministico che accetta \((a|b)^*abb\).
+    \end{center}
+    
+    Secondo la nostra convenzione per i diagrammi di transizione, il doppio cerchio dello stato 3 indica che si tratta di uno stato finale, cioè uno stato d'accettazione. Si noti che l'unico modo per arrivare dallo stato 0 allo stato 3 richiede di seguire un percorso che rimane per un po' nello stato 0, poi passa attraverso lo stato 1, poi il 2 e infine 3, leggendo \texttt{abb} dalla sequenza d'ingresso. In altre parole, le uniche stringhe che consentono di arrivare allo stato finale sono quelle che terminano per \texttt{abb}.
+    
+    \subsubsection{Tabelle di transizione}
+    Gli NFA sono descritti dalla seguente formula:
+    \[\delta : Q \times (\Sigma \cup \{\varepsilon\}) \rightarrow 2^{Q}\]
+    Possiamo rappresentare un NFA anche mediante una tabella di transizione, le cui righe corrispondono agli stati e le cui colonne indicano i simboli d'ingresso, più la stringa nulla $\varepsilon$. La casella corrispondente a un dato stato e un dato simbolo d'ingresso indica il valore assunto dalla funzione di transizione.
+    
+    \begin{center}
+    \begin{tabular}{c|c|c|c}
+    \textbf{Stato} & \textbf{a} & \textbf{b} & $\varepsilon$ \\
+    \hline
+    0 & $\{0,1\}$ & $\{0\}$ & $\varnothing$ \\
+    1 & $\varnothing$ & $\{2\}$ & $\varnothing$ \\
+    2 & $\varnothing$ & $\{3\}$ & $\varnothing$ \\
+    3 & $\varnothing$ & $\varnothing$ & $\varnothing$ \\
+    \end{tabular}
+    \\
+    \footnotesize Figura 3.20 \quad Tabella di transizione per l'NFA della Figura 3.19.
+    \end{center}
+    
+    %arrivato a pagina n.132 (libro-it)
+
+\subsection{Logica di simulazione di un NFA}
+
+\begin{verbatim}
+s = s_0
+c = nextChar()
+while (c != eof) {
+    s = \delta(s, c)
+    c = nextChar()
+}
+if (s \in F) return "sì"
+else return "no"
+\end{verbatim}
+
+Per la costruzione di un NFA da espressioni regolari si utilizzano i seguenti scheletri fondamentali:
+
+\begin{itemize}
+  \item \textbf{Unione} ($r = s \mid t$):  
+    Si crea un nuovo stato iniziale che, tramite transizioni $\varepsilon$, si collega sia al punto di ingresso dell'NFA per $s$ sia a quello per $t$. Gli stati finali dei due rami sono poi connessi tramite $\varepsilon$ a un unico nuovo stato finale comune.
+    
+    \begin{center}
+    \begin{tikzpicture}[node distance=1.6cm, auto]
+      \node[state, initial] (i) {i};
+      \node[state] (s1) [right=of i, yshift=0.6cm] {};
+      \node[state] (s2) [right=of s1] {};
+      \node[state, accepting, double, right=of s2, yshift=-0.6cm] (f) {f};
+      \node[state] (t1) [right=of i, yshift=-0.6cm] {};
+      \node[state] (t2) [right=of t1] {};
+      \path[->]
+        (i) edge node[above left] {$\varepsilon$} (s1)
+        (i) edge node[below left] {$\varepsilon$} (t1)
+        (s2) edge node[above right] {$\varepsilon$} (f)
+        (t2) edge node[below right] {$\varepsilon$} (f);
+    \end{tikzpicture}
+    \end{center}
+  
+  \item \textbf{Concatenazione} ($r = st$):  
+    I due NFA per $s$ e $t$ vengono “collegati in serie”: lo stato finale di $s$ viene collegato tramite una transizione $\varepsilon$ allo stato iniziale di $t$.
+    
+    \begin{center}
+    \begin{tikzpicture}[node distance=1.6cm, auto]
+      \node[state, initial] (i) {i};
+      \node[state] (s) [right=of i] {};
+      \node[state] (t) [right=of s] {};
+      \node[state, accepting, double, right=of t] (f) {f};
+      \path[->]
+        (i) edge (s)
+        (s) edge node[above] {$\varepsilon$} (t)
+        (t) edge (f);
+    \end{tikzpicture}
+    \end{center}
+  
+  \item \textbf{Chiusura di Kleene} ($r = s^*$):  
+    Si aggiungono un nuovo stato iniziale e uno finale. Dal nuovo iniziale si può andare con una $\varepsilon$ sia al nuovo finale (per accettare la stringa vuota), sia verso l'NFA di $s$. Dallo stato finale di $s$ partono due $\varepsilon$-transizioni, una che torna all'inizio di $s$ (per ripetizioni) e una che va al nuovo finale.
+    
+    % Schema 3: Chiusura di Kleene r = s^* (versione pulita)
+\begin{center}
+  \begin{tikzpicture}[
+      node distance=2.2cm,
+      auto,
+      every loop/.style={looseness=8},
+      >=stealth
+  ]
+    % Nodi
+    \node[state, initial] (i) {i};                      % nuovo iniziale
+    \node[state] (sL) [right=3cm of i] {};              % ingresso di s
+    \node[state] (sR) [right=2.5cm of sL] {};           % uscita di s
+    \node[state, accepting, double] (f) [right=3cm of sR, yshift=-0.2cm] {f}; % nuovo finale
+  
+    % Collegamenti epsilon principali
+    \path[->]
+      (i) edge[bend left=8] node[above] {$\varepsilon$} (sL)   % i -> s
+          edge[bend right=18] node[below] {$\varepsilon$} (f)  % i -> f (accetta ε)
+      (sR) edge[bend left=8] node[above] {$\varepsilon$} (f)    % s -> f
+      (sR) edge[bend left=35] node[above] {$\varepsilon$} (sL); % loop: s -> s
+  
+    % opzionale: leggera cornice attorno a N(s)
+    % \node[draw, rounded corners, fit=(sL)(sR), inner sep=6pt, label=below:{\small $N(s)$}] {};
+  \end{tikzpicture}
+  \end{center}  
+\end{itemize}
+
+\subsection*{Costruzione step-by-step di un NFA per \((a|b)^*abb\)}
+
+% NFA per la lettera 'a' (prima parte)
+\textbf{a:}\quad
+\begin{tikzpicture}[baseline=-0.5ex,node distance=1.8cm, 
+    every state/.style={minimum size=16pt}, auto]
+  \node[state, initial] (q2) {2};
+  \node[state, accepting, double] (q3) [right=of q2] {3};
+  \path[->]
+    (q2) edge node {a} (q3);
+\end{tikzpicture}
+\qquad
+% NFA per la lettera 'b' (seconda parte)
+\textbf{b:}\quad
+\begin{tikzpicture}[baseline=-0.5ex,node distance=1.8cm, 
+    every state/.style={minimum size=16pt}, auto]
+  \node[state, initial] (q4) {4};
+  \node[state, accepting, double] (q5) [right=of q4] {5};
+  \path[->]
+    (q4) edge node {b} (q5);
+\end{tikzpicture}
+
+
+\begin{minipage}[c]{0.49\textwidth}
+  \textbf{a|b:}
+  
+  \begin{tikzpicture}[node distance=1.7cm, on grid, auto]
+    \node[state, initial] (q1) {1};
+    \node[state] (q2) [above right=1.2cm and 1cm of q1] {2};
+    \node[state] (q3) [right=of q2] {3};
+    \node[state] (q4) [below right=1.2cm and 1cm of q1] {4};
+    \node[state] (q5) [right=of q4] {5};
+    \node[state, accepting, double] (q6) [right=3.8cm of q1] {6};
+    \path[->]
+      (q1) edge node[sloped, above] {$\varepsilon$} (q2)
+           edge node[sloped, below] {$\varepsilon$} (q4)
+      (q2) edge node {a} (q3)
+      (q3) edge node[sloped, above] {$\varepsilon$} (q6)
+      (q4) edge node {b} (q5)
+      (q5) edge node[sloped, below] {$\varepsilon$} (q6);
+    % Evidenziazione delle due sottosequenze (opzionale)
+    \usetikzlibrary{calc}
+    \draw[dashed, magenta, rounded corners=8pt] ($(q2)+(-0.3,0.5)$) rectangle ($(q3)+(0.3,-0.5)$);
+    \draw[dashed, magenta, rounded corners=8pt] ($(q4)+(-0.3,-0.5)$) rectangle ($(q5)+(0.3,0.5)$);
+  \end{tikzpicture}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[c]{0.49\textwidth}
+    \textbf{(a|b)$^*$:}
+
+    \begin{tikzpicture}[node distance=1.3cm, on grid, auto]
+      % Stati
+      \node[state, initial] (q0) {0};
+      \node[state] (q1) [right=of q0] {1};
+      \node[state] (q2) [above right=1.3cm and 1.1cm of q1] {2};
+      \node[state] (q3) [right=of q2] {3};
+      \node[state] (q4) [below right=1.3cm and 1.1cm of q1] {4};
+      \node[state] (q5) [right=of q4] {5};
+      \node[state] (q6) [right=4.0cm of q1] {6};
+      \node[state, accepting, double] (q7) [right=of q6] {7};
+    
+      % Transizioni
+      \path[->]
+        (q0) edge node[above] {$\varepsilon$}(q1)
+        (q1) edge[bend left=8] node[above] {$\varepsilon$} (q2)
+        (q1) edge[bend right=8] node[below] {$\varepsilon$} (q4)
+        (q2) edge node {a} (q3)
+        (q3) edge[bend left=8] node[above] {$\varepsilon$} (q6)
+        (q4) edge node {b} (q5)
+        (q5) edge[bend right=8] node[below] {$\varepsilon$} (q6)
+        (q6) edge[bend left=20] node[above] {$\varepsilon$} (q1)
+        (q0) edge[bend left=30] node[below] {$\varepsilon$} (q7)
+        (q6) edge[bend right=18] node[below] {$\varepsilon$} (q7);
+    \end{tikzpicture}
+    
+  \end{minipage}
+  
+  \textbf{(a|b)$^*$a:}
+
+\begin{tikzpicture}[node distance=1.7cm, on grid, auto]
+  % Stati
+  \node[state, initial] (q0) {0};
+  \node[state] (q1) [right=of q0] {1};
+  \node[state] (q2) [above right=1.2cm and 1cm of q1] {2};
+  \node[state] (q3) [right=of q2] {3};
+  \node[state] (q4) [below right=1.2cm and 1cm of q1] {4};
+  \node[state] (q5) [right=of q4] {5};
+  \node[state] (q6) [right=4.0cm of q1] {6};
+  \node[state] (q7) [right=of q6] {7};
+  \node[state, accepting, double] (q8) [right=of q7] {8};
+
+  % Transizioni automa star
+  \path[->]
+    (q0) edge node[above] {$\varepsilon$} (q1)
+    (q1) edge[bend left=12] node[above] {$\varepsilon$} (q2)
+    (q1) edge[bend right=12] node[below] {$\varepsilon$} (q4)
+    (q2) edge node {a} (q3)
+    (q3) edge[bend left=12] node[above] {$\varepsilon$} (q6)
+    (q4) edge node {b} (q5)
+    (q0) edge[bend left=30] node[below] {$\varepsilon$} (q7)
+    (q5) edge[bend right=12] node[below] {$\varepsilon$} (q6)
+    (q6) edge[bend left=18] node[above] {$\varepsilon$} (q1);
+
+  % Uscita dal blocco star verso nuovo stato per 'a'
+  \path[->]
+    (q6) edge node {$\varepsilon$} (q7)
+    (q7) edge node {a} (q8);
+
+\end{tikzpicture}
+
+
+\textbf{(a|b)$^*$abb:}
+
+\begin{tikzpicture}[node distance=1.7cm, on grid, auto]
+  % Stati principali
+  \node[state, initial] (q0) {0};
+  \node[state] (q1) [right=of q0] {1};
+  \node[state] (q2) [above right=1.2cm and 1cm of q1] {2};
+  \node[state] (q3) [right=of q2] {3};
+  \node[state] (q4) [below right=1.2cm and 1cm of q1] {4};
+  \node[state] (q5) [right=of q4] {5};
+  \node[state] (q6) [right=4.0cm of q1] {6};
+  \node[state] (q7) [right=of q6] {7};
+  \node[state] (q8) [right=of q7] {8};
+  \node[state] (q9) [right=of q8] {9};
+  \node[state, accepting, double] (q10) [right=of q9] {10};
+
+  % Transizioni automa star
+  \path[->]
+    (q0) edge node[above] {$\varepsilon$} (q1)
+    (q1) edge[bend left=12] node[above] {$\varepsilon$} (q2)
+    (q1) edge[bend right=12] node[below] {$\varepsilon$} (q4)
+    (q2) edge node {a} (q3)
+    (q3) edge[bend left=12] node[above] {$\varepsilon$} (q6)
+    (q4) edge node {b} (q5)
+    (q0) edge[bend left=30] node[below] {$\varepsilon$} (q7)
+    (q5) edge[bend right=12] node[below] {$\varepsilon$} (q6)
+    (q6) edge[bend left=18] node[above] {$\varepsilon$} (q1);
+
+  % Concatenazione abb finale
+  \path[->]
+    (q6) edge node {$\varepsilon$} (q7)
+    (q7) edge node {a} (q8)
+    (q8) edge node {b} (q9)
+    (q9) edge node {b} (q10);
+\end{tikzpicture}
+
+
+\subsection{Convertire un NFA in un DFA}
+
+\subsection*{$\varepsilon$-closure(s)}
+L'insieme degli stati del NFA raggiungibili da $s$ con solo $\varepsilon$-transizioni.
+
+\begin{align*}
+  \varepsilon\text{-cl}(6) &= \{6, 7, 1, 2, 4\} \\
+  \varepsilon\text{-cl}(8) &= \{8\} \\
+  \varepsilon\text{-cl}(0) &= \{0, 1, 2, 4, 7\}
+\end{align*}
+
+\subsection*{$\varepsilon$-closure(T)}
+L'insieme degli stati del NFA raggiungibili da un qualsiasi stato $s \in T$ con solo $\varepsilon$-transizioni:
+\[
+\varepsilon\text{-cl}(T) = \bigcup_{s \in T} \varepsilon\text{-cl}(s)
+\]
+
+\subsection*{move(T, a)}
+L'insieme degli stati raggiungibili leggendo "a" da ogni stato di $T$.
+
+\[
+\varepsilon\text{-cl}(0) = \{0, 1, 2, 4, 7\} = A
+\]
+
+\begin{align*}
+  \mathrm{Dtran}[A, a] &= \varepsilon\text{-cl}(\mathrm{move}(A, a))\\
+        &= \varepsilon\text{-cl}(\{3, 8\}) = \{3, 6, 7, 1, 2, 4, 8\} = \{1, 2, 3, 4, 6, 7, 8\} = B \\
+  \mathrm{Dtran}[A, b] &= \varepsilon\text{-cl}(\mathrm{move}(A, b))\\
+        &= \varepsilon\text{-cl}(\{5\}) = \{1, 2, 4, 5, 6, 7\} = C \\
+  \mathrm{Dtran}[B, a] &= \varepsilon\text{-cl}(\mathrm{move}(B, a))\\
+        &= \varepsilon\text{-cl}(\{3, 8\}) = B
+\end{align*}
+
+\vspace{0.3cm}
+\texttt{Dtran[B, b]},\quad \texttt{Dtran[C, a]},\quad \texttt{Dtran[C, b]},\quad \texttt{Dtran[D, a]},\quad \texttt{Dtran[D, b]}
+
+\vspace{0.5cm}
+\begin{minipage}{0.45\textwidth}
+  \textbf{Tabella delle transizioni DFA}
+  
+  \begin{tabular}{c|c|c}
+   & a & b \\
+  \hline
+  A & B & C \\
+  B & B & D \\
+  C & B & E \\
+  D & B & D \\
+  E & B & C \\
+  \end{tabular}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.52\textwidth}
+  \textbf{Schema DFA}
+  
+  \begin{tikzpicture}[node distance=1.8cm, auto]
+    \node[state, initial] (A) {A};
+    \node[state] (B) [right=of A] {B};
+    \node[state] (C) [below=of B] {C};
+    \node[state] (D) [right=of B] {D};
+    \node[state, accepting, double] (E) [below=of D] {E};
+  
+    % Archi delle transizioni
+    \path[->]
+      (A) edge[bend left] node {a} (B)
+      (A) edge[bend right] node {b} (C)
+      (B) edge[loop above] node {a} ()
+      (B) edge node {b} (D)
+      (C) edge node {a} (B)
+      (C) edge[bend right] node {b} (E)
+      (D) edge[loop above] node {b} ()
+      (D) edge node {a} (B);
+  \end{tikzpicture}
+  \end{minipage}
+  
+  \subsection{Minimizzazione dei DFA}
+  \vspace{0.7em}
+  Data una stringa $x$, si dice che $x$ \textbf{distingue} due stati se, partendo da questi stati e seguendo le transizioni etichettate da $x$, si arriva esattamente in uno stato di accettazione e nell'altro in uno stato non accettante.
+  
+  \vspace{0.7em}
+  Uno stato $A$ è \textbf{distinguibile} da uno stato $B$ se esiste almeno una stringa che li distingue.
+  
+  \vspace{0.7em}
+  Due stati $A$ e $B$ \textbf{non sono equivalenti} se esiste almeno una stringa che li distingue, cioè se esiste una transizione che li porta verso comportamenti diversi rispetto all'accettazione.
+  
+  \vspace{1em}
+  \textbf{Esempio}:
+  
+  \begin{center}
+  \begin{tikzpicture}[node distance=2.3cm, auto, >=stealth]
+    \node[state, initial] (A) {A};
+    \node[state] (B) [right=of A] {B};
+    \node[state] (C) [above=1.4cm of B] {C};
+    \node[state] (D) [right=of B] {D};
+    \node[state, accepting, double] (E) [right=of D] {E};
+  
+    % Transizioni
+    \path[->]
+      (A) edge [bend left=25] node {b} (C)
+          edge node {a} (B)
+      (B) edge [bend left=25] node {a} (A)
+          edge [bend left=8] node {a} (C)
+          edge node {b} (D)
+      (B) edge [loop below] node {a} ()
+      (C) edge node {b} (E)
+      (D) edge [bend left=18] node {b} (B)
+          edge node {b} (E)
+          edge [loop above] node {a} ()
+      (E) edge [loop right] node {b} ();
+  \end{tikzpicture}
+  \end{center}
+  
+  % Partizioni nella minimizzazione
+\begin{enumerate}
+  \item $\{A, B, C, D\}$ \ \ $\{E\}$
+  \item $\{A, B, C\}$ \ $\{D\}$ \ $\{E\}$
+  \item $\{A, C\}$ \ $\{B\}$ \ $\{D\}$ \ $\{E\}$
+\end{enumerate}
+
+Nel nuovo automa, lo stato iniziale sarà $\{AC\}$ perché contiene lo stato $A$ che era iniziale.  
+Lo stato finale rimane $\{E\}$.
+
+L'automa finale sarà:
+\begin{center}
+  \begin{tikzpicture}[auto, >=stealth, node distance=3cm, every node/.style={font=\small}]
+    % Stati disposti a diamante per evitare sovrapposizioni
+    \node[state, initial] (AC) {AC};
+    \node[state] (B) [right=of AC] {B};
+    \node[state] (D) [below right=2cm and 1.6cm of AC] {D};
+    \node[state, accepting, double] (E) [below left=2cm and 2.6cm of B] {E};
+  
+    % Archi senza sovrapposizioni
+    \draw[->] (AC) -- node[above] {a} (B);
+    \draw[->] (AC) edge[loop above] node {b} ();
+    \draw[->, bend left=18] (AC) to node[left] {b} (E);
+  
+    \draw[->] (B) -- node[right] {b} (D);
+    \draw[->] (B) edge[loop above] node {a} ();
+    \draw[->, bend left=25] (B) to node[above] {a} (AC);
+  
+    \draw[->] (D) edge[loop right] node {b} ();
+    \draw[->, bend left=20] (D) to node[right] {a} (B);
+    \draw[->, bend left=18] (D) to node[below right] {b} (E);
+  
+    \draw[->] (E) edge[loop below] node {b} ();
+  \end{tikzpicture}
+  \end{center}
+  
