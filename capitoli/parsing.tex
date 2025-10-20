@@ -1,0 +1,427 @@
+\section{Parsing}
+\subsection{Derivazioni e Parsing}
+Il \textbf{parsing} è il processo con cui, data una stringa, si verifica se essa appartiene al linguaggio generato da una grammatica, cercando di trovare una derivazione dalla radice (simbolo iniziale) fino alla stringa stessa. Si distinguono:
+\begin{itemize}
+    \item \textbf{Derivazione sinistra (leftmost):} si espande sempre la non-terminal più a sinistra.
+    \item \textbf{Derivazione destra (rightmost):} si espande la più a destra.
+\end{itemize}
+
+\begin{tikzpicture}[
+    level distance=2.5cm,
+    sibling distance=4.2cm,
+    grow=down,
+    every node/.style={font=\large},
+    edge from parent/.style={draw, -}
+  ]
+  \node {$E$}
+    child { node {$T$}
+      child { node {$F$}
+        child { node {\underline{id}} }
+      }
+      child { node {$T'$}
+        child { node {\underline{$\epsilon$}} }
+      }
+    }
+    child { node {$E'$}
+      child { node {\underline{+}} }
+      child { node {$T$} [sibling distance=2cm]
+        child { node {$F$}
+          child { node {\underline{id}} }
+        }
+        child { node {$T'$} [sibling distance=1.2cm]
+          child { node {\underline{*}} }
+          child { node {$F$}
+            child { node {\underline{id}} }
+          }
+          child { node {\underline{$\epsilon$}} }
+        }
+      }
+      child { node {$E'$}
+        child { node {\underline{$\epsilon$}} }
+      }
+    };
+  \end{tikzpicture}
+  
+  
+
+\subsection{Parser Top-Down}
+Un \textbf{parser top-down} tenta di costruire una derivazione sinistra della stringa d’ingresso:
+\begin{itemize}
+    \item \textbf{Discesa ricorsiva:} implementazione semplice, tramite chiamate di procedura per ogni non-terminale.
+    \item \textbf{Con backtracking:} prova tutte le produzioni possibili; torna indietro in caso di errore.
+    \item \textbf{Senza backtracking (LL, tabellare):} per ogni \texttt{(stato, simbolo)} esiste una sola scelta.
+\end{itemize}
+
+\vspace{1em}
+\begin{algorithm}
+    \caption{Procedura di discesa ricorsiva per $A$}
+    \begin{algorithmic}[1]
+    \Procedure{A}{}
+        \State Scegli, per $A$, una produzione $A \rightarrow X_1 X_2 \dots X_k$
+        \For{ $i$ da $1$ fino a $k$ }
+            \If{ $X_i$ è un non-terminale }
+                \State richiama la procedura $X_i()$
+            \ElsIf{ $X_i$ è uguale al simbolo d'ingresso corrente $a$ }
+                \State procedi al simbolo successivo nella sequenza d'ingresso
+            \Else
+                \State /* si è verificato un errore */
+            \EndIf
+        \EndFor
+    \EndProcedure
+    \end{algorithmic}
+    \end{algorithm}
+    
+
+\textbf{Esempio: per l'algoritmo della discesa ricorsiva}
+
+Stringa da analizzare: \texttt{id + id * id}
+
+% Tabella delle produzioni (puoi regolare ulteriormente la formattazione)
+\begin{table}[ht]
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|c|c|c|c|c|c|}
+    \hline
+    \textbf{Non} & \multicolumn{6}{c|}{\textbf{Simbolo d'ingresso}} \\
+    \cline{2-7}
+    \textbf{terminale} & \texttt{id} & \texttt{+} & \texttt{*} & \texttt{(} & \texttt{)} & \texttt{\$ (fine stringa)} \\
+    \hline
+    $E$  & $E \rightarrow T E'$     &             &             & $E \rightarrow T E'$ &             &             \\
+    \hline
+    $E'$ &                         & $E' \rightarrow +T E'$ &             &             & $E' \rightarrow \epsilon$ & $E' \rightarrow \epsilon$ \\
+    \hline
+    $T$  & $T \rightarrow F T'$     &             &             & $T \rightarrow F T'$  &             &             \\
+    \hline
+    $T'$ &                         & $T' \rightarrow \epsilon$ & $T' \rightarrow *F T'$ &             & $T' \rightarrow \epsilon$ & $T' \rightarrow \epsilon$ \\
+    \hline
+    $F$  & $F \rightarrow id$       &             &             & $F \rightarrow (E)$   &             &             \\
+    \hline
+    \end{tabular}
+    \end{table}
+\textit{La tabella guida le scelte dell'algoritmo in funzione del simbolo d'ingresso.}
+
+\vspace{0.8em}
+Produzioni:
+\[
+\begin{array}{l}
+E \rightarrow T E' \\
+T \rightarrow F T' \\
+F \rightarrow id \\
+T' \rightarrow * F T' \mid \epsilon \\
+E' \rightarrow + T E' \mid \epsilon \\
+\end{array}
+\]
+
+\vspace{0.8em}
+
+Passaggi:
+\begin{itemize}
+    \item $E \rightarrow T E'$
+    \item $T \rightarrow F T'$    \hspace{1em} (eseguo $F \rightarrow id$  $\Rightarrow$ \texttt{match()}, avanzo su "+")
+    \item $T' \rightarrow \epsilon$
+    \item $E' \rightarrow + T E'$  \hspace{1em} (match "+", avanzo su "id")
+    \item $T \rightarrow F T'$     \hspace{1em} (match "id", avanzo su "\texttt{*}")
+    \item $T' \rightarrow * F T'$  \hspace{1em} (match "*", avanzo su "id")
+    \item $F \rightarrow id$       (match "id", arrivo a fine stringa)
+    \item $T' \rightarrow \epsilon$
+    \item $E' \rightarrow \epsilon$
+\end{itemize}
+
+
+\textbf{Esempio 2:}
+\[
+\begin{array}{l}
+S \rightarrow cAd \\
+A \rightarrow ab \mid a \\
+S \rightarrow cAd \to c(ab)d \mid c(a)d
+\end{array}
+\]
+
+Analisi:
+\begin{enumerate}
+    \item Input: \texttt{cad}
+    \item Provo $A \rightarrow ab$\\
+          \texttt{c} (\texttt{match}), \texttt{a} (\texttt{match}),\\
+          \textbf{errore}: simbolo d'ingresso "d" non corrisponde a "b" $\Rightarrow$ backtracking
+    \item Provo $A \rightarrow a$\\
+          \texttt{c} (\texttt{match}), \texttt{a} (\texttt{match}), \texttt{d} (\texttt{match}), successo
+\end{enumerate}
+
+Nota: Le indentazioni non sono generalmente usate nell'approccio manuale della discesa ricorsiva.
+
+
+\subsection{Parser Bottom-Up}
+Nel \textbf{parser bottom-up} si parte dalla stringa e si cerca di ricostruire l’albero, risalendo fino al simbolo iniziale:
+\begin{itemize}
+    \item Ricerca una derivazione destra in maniera inversa (\emph{rightmost derivation in reverse}).
+\end{itemize}
+
+\subsection{Ricorsione Sinistra}
+Se una grammatica presenta ricorsione sinistra (diretta o indiretta), la discesa ricorsiva non funziona senza modifiche:
+\begin{itemize}
+    \item \textbf{Ricorsione sinistra diretta:} Se la grammatica ha una produzione ricorsiva sinistra, ovvero:
+        
+\[
+    S \rightarrow S \alpha \mid \beta
+    \]
+    
+    allora la si può riscrivere eliminando la ricorsione sinistra come:
+    
+    \[
+    \begin{cases}
+    S \rightarrow \beta A \\
+    A \rightarrow \alpha A \mid \varepsilon 
+    \end{cases}
+    \]
+
+    Questa trasformazione può essere applicata anche in presenza di più ricorsioni sinistre nel sistema di produzioni.
+
+    \item \textbf{Algoritmo di eliminazione:}
+    \begin{enumerate}
+        \item Ordina i non-terminali.
+        \item Sostituisci produzioni ricorsive.
+        \item Elimina la ricorsione immediata con una nuova variabile ausiliaria.
+    \end{enumerate}
+
+    \item \textbf{Ricorsione sinistra indiretta:} La ricorsione sinistra può essere \textbf{non diretta}.
+    \end{itemize}       
+    \subsection{Esempio di eliminazione della ricorsione sinistra non immediata}
+
+    Consideriamo la grammatica:
+    
+    \[
+    \begin{array}{l}
+    S \rightarrow Aa \mid b \\
+    A \rightarrow Ac \mid Sd \mid \varepsilon
+    \end{array}
+    \]
+    
+    \textbf{Primo passo:} si sostituiscono le occorrenze di $S$ nelle produzioni di $A$ usando la produzione di $S$, ottenendo:
+    
+    \[
+    \begin{array}{l}
+    S \rightarrow Aa \mid b \\
+    A \rightarrow Ac \mid (Aa)d \mid b d \mid \varepsilon
+    \end{array}
+    \]
+    
+    \textbf{Secondo passo:} si raggruppa e riscrive per evidenziare la ricorsione sinistra diretta:
+    
+    \[
+    \begin{array}{l}
+    S \rightarrow Aa \mid b \\
+    A \rightarrow Ac \mid a d \mid b d \mid \varepsilon
+    \end{array}
+    \]
+    (viene evidenziata la ricorsione sinistra in $A \rightarrow Ac$)
+    
+    \textbf{Terzo passo:} si elimina la ricorsione sinistra diretta da $A$ introducendo la variabile ausiliaria $A'$:
+    
+    \[
+    \begin{array}{l}
+    S \rightarrow Aa \mid b \\
+    A \rightarrow b d A' \mid a d A' \mid \varepsilon \\
+    A' \rightarrow c A' \mid a d A' \mid \varepsilon
+    \end{array}
+    \]
+    
+    In questo modo, la grammatica risultante è \textbf{priva di ricorsione sinistra} e adatta per un parser con discesa ricorsiva.
+    
+    
+
+    Esiste un algoritmo sistematico per eliminare la ricorsione sinistra dalle grammatiche:
+
+
+    \begin{algorithm}
+        \caption{Eliminazione della ricorsione sinistra}
+        \begin{algorithmic}[1]
+        \State Ordina arbitrariamente i non-terminali come $A_1, A_2, \ldots, A_n$
+        \For{ogni $i$ da $1$ fino a $n$}
+            \For{ogni $j$ da $1$ fino a $i-1$}
+                \State Sostituisci ogni produzione nella forma $A_i \rightarrow A_j \gamma$\\
+                \hspace{1.5em}  con le produzioni $A_i \rightarrow \delta_1 \gamma \;|\; \delta_2 \gamma \;|\; \cdots \;|\; \delta_k \gamma$,\\
+                \hspace{1.5em}  in cui $A_j \rightarrow \delta_1 \;|\; \delta_2 \;|\; \cdots \;|\; \delta_k$ sono tutte le produzioni per il non-terminale $A_j$ in esame
+            \EndFor
+            \State Elimina la ricorsione sinistra immediata dalle produzioni per $A_i$
+        \EndFor
+        \end{algorithmic}
+    \end{algorithm}     
+
+\textbf{Esempio 1:}
+\[
+\begin{array}{l}
+A \rightarrow Ba \mid d \\
+B \rightarrow Bb \mid Ac \mid \varepsilon \\
+\end{array}
+\]
+
+\vspace{1em}
+Dopo $i = 2$ (sostituzione di $A \rightarrow Ba$):
+\[
+\begin{array}{l}
+A \rightarrow (Bb \mid Ac \mid \varepsilon) a \mid d \\[0.3em]
+= Ba c \mid B b a \mid d a \mid d \\
+B \rightarrow Bb \mid Ac \mid \varepsilon \\
+\end{array}
+\]
+
+\vspace{1em}
+Eliminando la ricorsione sinistra su $B$:
+
+\[
+\begin{array}{l}
+A \rightarrow Ba \mid d \\
+B \rightarrow dcB' \mid B' \\
+B' \rightarrow bb' \mid acB' \mid \varepsilon \\
+\end{array}
+\]
+
+\textbf{Esempio 2:}
+
+\[
+\begin{array}{l}
+A \rightarrow Ba \mid C \\
+B \rightarrow Cc \mid A \\
+C \rightarrow Cc \mid d \\
+\end{array}
+\]
+
+\vspace{1em}
+Dopo sostituzioni:
+\[
+\begin{array}{l}
+A \rightarrow Ba \mid C \\
+B \rightarrow Cc \mid Ba \mid C \\
+C \rightarrow Cc \mid d \\
+\end{array}
+\]
+
+\vspace{1em}
+Eliminando la ricorsione sinistra ($B$):
+
+\[
+\begin{array}{l}
+A \rightarrow Ba \mid C \\
+B \rightarrow CbB' \mid CB' \\
+B' \rightarrow aB' \mid \varepsilon \\
+C \rightarrow Cc \mid d \\
+\end{array}
+\]
+
+\vspace{1em}
+Eliminando la ricorsione sinistra ($C$):
+
+\[
+\begin{array}{l}
+A \rightarrow Ba \mid C \\
+B \rightarrow CbB' \mid CB' \\
+B' \rightarrow aB' \mid \varepsilon \\
+C \rightarrow dC' \\
+C' \rightarrow cC' \mid \varepsilon \\
+\end{array}
+\]
+
+\subsection{Fattorizzazione comune:}
+Se $A \rightarrow \alpha\beta_1 \mid \alpha\beta_2 \mid \ldots \mid \alpha\beta_k \mid \gamma_1 \mid \gamma_2 \mid \ldots \mid \gamma_n$ \\
+con $\alpha$ prefisso più lungo comune, allora si può riscrivere come:
+
+\[
+\begin{aligned}
+A &\rightarrow \alpha A' \mid \gamma_1 \mid \gamma_2 \mid \ldots \mid \gamma_n \\
+A' &\rightarrow \beta_1 \mid \beta_2 \mid \ldots \mid \beta_k
+\end{aligned}
+\]
+
+\textbf{Esempio 1:}
+\[
+\begin{aligned}
+A &\rightarrow abc d \mid abc e \mid abf \\
+\end{aligned}
+\]
+
+\vspace{1em}
+Fattorizzazione:
+\[
+\begin{aligned}
+A &\rightarrow abc A' \mid abf \\
+A' &\rightarrow d \mid e
+\end{aligned}
+\]
+
+% oppure con doppio passaggio, come nell'immagine:
+Oppure:
+\[
+\begin{aligned}
+A &\rightarrow ab A'' \\
+A'' &\rightarrow cA' \mid f \\
+A' &\rightarrow d \mid e
+\end{aligned}
+\]
+
+
+\textbf{Esempio 2: fattorizzazione comune + ricorsione diretta}
+
+\[
+\begin{aligned}
+A &\rightarrow Abc d \mid Abc e \mid abf
+\end{aligned}
+\]
+
+Fattorizzazione:
+\[
+\begin{aligned}
+A &\rightarrow Abc A' \mid abf \\
+A' &\rightarrow d \mid e
+\end{aligned}
+\]
+
+Eliminazione ricorsione diretta:
+\[
+\begin{aligned}
+A &\rightarrow abf A'' \\
+A'' &\rightarrow bcA' A'' \mid \varepsilon \\
+A' &\rightarrow d \mid e
+\end{aligned}
+\]
+
+% oppure come nell'altra variante dell'immagine:
+Oppure:
+\[
+\begin{aligned}
+A &\rightarrow Abc d \mid Abc e \mid abf \\
+\rightarrow abf A' \\
+A' &\rightarrow bc d A'' \mid bc e A'' \mid \varepsilon \\
+A'' &\rightarrow abf \mid cA'
+\end{aligned}
+\]
+
+
+
+\subsection{Schema comparativo dei parser}
+
+% Esempio di tabella comparativa
+\begin{table}[h!]
+\centering
+\begin{tabular}{l|l|l}
+Parser & Tecnica & Pro/Contro \\
+\hline
+Discesa ricorsiva & Top-down & Semplice, non sempre applicabile\\
+LL(1), tabellare  & Top-down & Rapido, niente backtracking\\
+Bottom-up (LR)    & Bottom-up & Più potente, tabellare\\
+\end{tabular}
+\end{table}
+
+\subsection{Esempi di Alberi di Parsing e Automazione}
+
+% Esempio slot per diagramma
+\begin{center}
+% INSERIRE QUI IL DIAGRAMMA TIKZ DELL'ALBERO DI PARSING O DELL'AUTOMA
+\end{center}
+
+\vspace{1em}
+Ripeti la seguente struttura per ogni argomento della dispensa, inserendo diagrammi TikZ laddove nell’originale sono presenti esempi o tabelle.
+
+\textbf{Suggerimenti sui diagrammi:}
+- Usa \texttt{tikz-automata} per automi e analizzatori sintattici.
+- Usa \texttt{forest} per alberi di parsing.
+- Tabella e lista laddove servono (ad esempio, nella costruzione delle tabelle di parsing o nello svolgimento di un esempio).
