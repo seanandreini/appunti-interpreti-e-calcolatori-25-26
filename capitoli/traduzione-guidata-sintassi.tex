@@ -1,0 +1,346 @@
+\section{Traduzione guidata dalla sintassi}
+
+Associando attributi ai simboli grammaticali, si definiscono valori tramite regole semantiche. La traduzione guidata dalla sintassi costruisce un albero di parsing per calcolare questi valori.
+
+\subsection{Definizioni guidate dalla sintassi (SSD)}
+
+È una grammatica context-free con l'aggiunta di attributi e regole semantiche. Gli attributi sono associati ai simboli della grammatica, le regole semantiche sono associate alle produzioni.
+
+\textbf{Osservazione:} Dato un simbolo della grammatica \(X\) e uno dei suoi attributi \(a\), si indica \(X.a\).
+
+Una SSD che contiene solo attributi sintetizzati è detta \textbf{S-attribuita}. Ogni regola calcola un attributo associato alla variabile della parte sinistra della produzione mediante gli attributi associati ai simboli della parte destra. Una SSD senza effetti collaterali è detta \textbf{grammatica ad attributi}.
+
+\subsection{Valutazione di una SSD ai nodi di un albero di parsing}
+
+Un albero di parsing annotato mostra i valori degli attributi associati ai nodi.
+
+Gli attributi ereditati sono utili quando la struttura dell'albero di parsing non corrisponde alla sintassi astratta del codice sorgente.
+
+\subsubsection{Attributi sintetizzati}
+Un attributo sintetizzato relativo ad un nodo \(N\) è definito unicamente in base ai figli di \(N\) e a \(N\) stesso.
+
+\subsubsection{Attributi ereditati}
+Un attributo ereditato relativo ad un nodo \(N\) è definito unicamente in base al padre di \(N\), a \(N\) stesso e ai fratelli di \(N\) (non dai figli).
+
+\textbf{NB!} I terminali non possono avere attributi ereditati.
+
+\subsection{Esempio: \(3 \times 5 \times 4\)}
+
+\subsubsection{Prima grammatica}
+
+\textbf{Produzioni e regole semantiche:}
+
+\begin{enumerate}
+    \item \(T \to T * F\) \quad \(T.val = T.val \times F.val\)
+    \item \(T \to F\) \quad \(T.val = F.val\)
+    \item \(F \to \text{num}\) \quad \(F.val = \text{num}.lexval\)
+\end{enumerate}
+
+\textbf{Albero di parsing annotato:}
+
+\begin{center}
+\begin{tikzpicture}[
+  level distance=1.5cm,
+  level 1/.style={sibling distance=3cm},
+  level 2/.style={sibling distance=2cm},
+  level 3/.style={sibling distance=1.5cm}
+]
+\node {\(T.val =\)}
+  child {node {\(T.val =\)}
+    child {node {\(T.val\)}
+      child {node {\(F.val\)}
+        child {node {3}}
+      }
+    }
+    child {node {*}}
+    child {node {\(F.val\)}
+      child {node {5}}
+    }
+  }
+  child {node {*}}
+  child {node {\(F.val\)}
+    child {node {4}}
+  };
+\end{tikzpicture}
+\end{center}
+
+\textbf{Ordinamento di valutazione:} 3, *, 5, *, 4
+
+\subsubsection{Seconda grammatica (con attributi ereditati)}
+
+\textbf{Produzioni e regole semantiche:}
+
+\begin{enumerate}
+    \item \(T \to FT'\) \quad \(T'.inh = F.val\) \quad \(T.val = T'.syn\)
+    \item \(T' \to *FT'_1\) \quad \(T'_1.inh = T'.inh \times F.val\) \quad \(T'.syn = T'_1.syn\)
+    \item \(T' \to \varepsilon\) \quad \(T'.syn = T'.inh\)
+    \item \(F \to \text{num}\) \quad \(F.val = \text{num}.lexval\)
+\end{enumerate}
+
+\textbf{Albero di parsing annotato:}
+
+\begin{center}
+\begin{tikzpicture}[
+  level distance=2.2cm,
+  level 1/.style={sibling distance=7cm},
+  level 2/.style={sibling distance=4.5cm},
+  level 3/.style={sibling distance=3.5cm},
+  level 4/.style={sibling distance=2.5cm},
+  every node/.style={align=center, text width=4.5cm, font=\small}
+]
+\node {\(T.val = T'.syn(60)\)}
+  child {node[text width=3cm] {\(F.val =\) \\ \(\text{num}.lexval(3)\)}
+    child {node[text width=1cm] {3}}
+  }
+  child {node[text width=4cm] {\(T'.inh = F.val(3)\) \\ \(T'.syn = T'_1.syn(60)\)}
+    child {node[text width=1cm] {*}}
+    child {node[text width=3cm] {\(F.val =\) \\ \(\text{num}.lexval(5)\)}
+      child {node[text width=1cm] {5}}
+    }
+    child {node[text width=4.5cm] {\(T'_1.inh =\) \\ \(T'.inh \times F.val(15)\) \\ \(T'_1.syn = T'_2.syn(60)\)}
+      child {node[text width=1cm] {*}}
+      child {node[text width=3cm] {\(F.val =\) \\ \(\text{num}.lexval(4)\)}
+        child {node[text width=1cm] {4}}
+      }
+      child {node[text width=4.5cm] {\(T'_2.inh =\) \\ \(T'_1.inh \times F.val(60)\) \\ \(T'_2.syn = T'_2.inh(60)\)}
+        child {node[text width=1.5cm] {\(\varepsilon\)}}
+      }
+    }
+  };
+\end{tikzpicture}
+\end{center}
+
+\textbf{Ordinamento di valutazione:} 3, 5, *, 4, \(\varepsilon\)
+
+\textbf{Calcolo dei valori:}
+\begin{itemize}
+    \item \(F.val = 3\)
+    \item \(T'.inh = 3\)
+    \item \(F.val = 5\)
+    \item \(T'_1.inh = 3 \times 5 = 15\)
+    \item \(F.val = 4\)
+    \item \(T'_2.inh = 15 \times 4 = 60\)
+    \item \(T'_2.syn = 60\)
+    \item \(T'_1.syn = 60\)
+    \item \(T'.syn = 60\)
+    \item \(T.val = 60\)
+\end{itemize}
+
+
+
+\subsection{Grafi delle dipendenze}
+
+\subsubsection{Esempio: \(1 * 2\)}
+
+\textbf{Produzioni e regole semantiche:}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Produzione} & \textbf{Regole semantiche} \\
+\hline
+1) \(T \to FT'\) & \(T'.inh = F.val\) \\
+ & \(T.val = T'.syn\) \\
+\hline
+2) \(T' \to * F T'_1\) & \(T'_1.inh = T'.inh \times F.val\) \\
+ & \(T'.syn = T'_1.syn\) \\
+\hline
+3) \(T' \to \varepsilon\) & \(T'.syn = T'.inh\) \\
+\hline
+4) \(F \to \text{digit}\) & \(F.val = \text{digit}.lexval\) \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Grafo delle dipendenze:}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm and 2cm,
+  every node/.style={font=\footnotesize},
+  arrow/.style={->, thick, >=stealth, dashed}
+]
+
+% Nodi disposti secondo l'immagine
+\node (T9val) at (2,5) {\(T\) 9 \(val\)};
+\node (F3val) at (-2,3.5) {\(F\) 3 \(val\)};
+\node (inh5) at (2,3.5) {\(inh\) 5 \(T'\)};
+\node (syn8) at (5,3.5) {8 \(syn\) \(T'\)};
+\node (digit1) at (-2,2) {digit 1 \(lexval\)};
+\node (star) at (0,2) {*};
+\node (F4val) at (2,1.5) {\(F\) 4 \(val\)};
+\node (inh6) at (4.5,1.5) {\(inh\) 6 \(T'\)};
+\node (syn7) at (6.5,1.5) {7 \(syn\) \(T'\)};
+\node (digit2) at (2,0) {digit 2 \(lexval\)};
+\node (epsilon) at (4.5,0) {\(\varepsilon\)};
+
+% Frecce come nell'immagine
+% digit 1 -> F 3 val
+\draw[arrow] (digit1) -- (F3val);
+
+% F 3 val -> inh 5 T'
+\draw[arrow] (F3val) to[out=0, in=180] (inh5);
+
+% digit 2 -> F 4 val
+\draw[arrow] (digit2) -- (F4val);
+
+% F 4 val -> inh 6 T'
+\draw[arrow] (F4val) -- (inh6);
+
+% inh 5 T' -> inh 6 T' (curva)
+\draw[arrow] (inh5) to[out=-20, in=150] (inh6);
+
+% inh 6 T' -> syn 7 T' (arco sopra)
+\draw[arrow] (inh6) to[out=60, in=120] (syn7);
+
+% syn 7 T' -> syn 8 T'
+\draw[arrow] (syn7) to[out=150, in=0] (syn8);
+
+% syn 8 T' -> T 9 val (curva a destra)
+\draw[arrow] (syn8) to[out=90, in=0] (T9val);
+
+\end{tikzpicture}
+\end{center}
+
+
+\subsection{Ordinamento topologico}
+
+Gli ordinamenti validi sono costituiti da sequenze \(N_1, N_2, \ldots, N_k\), tale che se esiste un arco dal nodo \(N_i\) al nodo \(N_j\) nel grafo delle dipendenze, allora deve essere \(i < j\).
+
+\subsection{Grammatiche S-attribuite}
+
+Una definizione guidata dalla sintassi è S-attribuita se e solo se ogni suo attributo è sintetizzato.
+
+\subsection{Grammatiche L-attribuite}
+
+Gli attributi associati ai simboli della parte destra di una regola, nel grafo delle dipendenze, possono avere archi orientati da sinistra a destra. Gli attributi ereditati possono utilizzare attributi ereditati o sintetizzati da sinistra e dalla stessa occorrenza, evitando cicli.
+
+\subsubsection*{}
+Non sempre le regole semantiche bastano, si inseriscono delle regole semantiche dette \textbf{effetti controllati}, che producono una traduzione corretta (stampe o interazione con la tavola dei simboli).
+\subsubsection*{}
+Permessi in modo che la traduzione per ogni ordinamento sia comunque corretta. I vincoli sono visti come archi impliciti.
+
+\subsection{Alberi sintattici}
+
+È utile trasformare una stringa in ingresso in un albero che ne rappresenta la struttura.
+
+\subsection{Classi di SDT implementabili durante il parsing}
+
+Due classi di SDT che consentono l'implementazione dell'SDT durante il parsing:
+
+\begin{enumerate}
+    \item La grammatica sottostante può essere riconosciuta da un parser LR e la SDD è S-attribuita (bottom-up)
+    \item La grammatica sottostante può essere riconosciuta da un parser LL e la SDD è L-attribuita (top-down)
+\end{enumerate}
+
+\subsubsection{Marcatori e proprietà}
+
+\textbf{Proprietà:} Se la grammatica arricchita con i marcatori può essere trattata da un dato metodo di parsing, allora lo SDT corrispondente può essere implementato durante il parsing.
+
+\subsection{SDT postfissi}
+
+Per una produzione \(A \to XYZ\) con azione alla fine.
+
+\subsubsection{Schema di traduzione postfisso - Calcolatrice}
+
+\textbf{Produzioni, Regole sintattiche e SDT:}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Produzioni} & \textbf{Regole sintattiche} & \textbf{SDT} \\
+\hline
+\(L \to E\) \textbf{n} & \{\texttt{print}(\(E.val\))\} & \{\texttt{print}(\(E.val\))\} \\
+\hline
+\(E \to E + T\) & \{\(E.val = E_1.val + T.val\)\} & \{\(E.val = E_1.val + T.val\)\} \\
+\hline
+\(E \to T\) & \{\(E.val = T.val\)\} & \{\(E.val = T.val\)\} \\
+\hline
+\(T \to T * F\) & \{\(T.val = T_1.val \times F.val\)\} & \{\(T.val = T_1.val \times F.val\)\} \\
+\hline
+\(T \to F\) & \{\(T.val = F.val\)\} & \{\(T.val = F.val\)\} \\
+\hline
+\(F \to (E)\) & \{\(F.val = E.val\)\} & \{\(F.val = E.val\)\} \\
+\hline
+\(F \to \textbf{digit}\) & \{\(F.val = \textbf{digit}.lexval\)\} & \{\(F.val = \textbf{digit}.lexval\)\} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Stack del parser con attributi}
+
+\textbf{Rappresentazione dello stack:}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+ & \(XYZ\) & \\
+\hline
+ & \(X.x\) \(Y.y\) \(Z.z\) & \\
+\hline
+\multicolumn{3}{c}{\(\uparrow\)} \\
+\multicolumn{3}{c}{top} \\
+\end{tabular}
+\end{center}
+
+Dopo una riduzione \(A \to XYZ\):
+
+\begin{center}
+\begin{tabular}{|c|}
+\hline
+\(A\) \\
+\hline
+\(A.a\) \\
+\hline
+\(\uparrow\) \\
+top \\
+\end{tabular}
+\end{center}
+
+Dove \(A.a = f(X.x, Y.y, Z.z)\)
+
+\subsection{Implementazione con manipolazione dello stack}
+
+\textbf{Azioni con manipolazione esplicita dello stack:}
+
+\begin{itemize}
+    \item \(L \to E\) \textbf{n}: \{\texttt{print}(\(stack[top-1].val\)); \(top = top - 1\)\}
+    \item \(E \to E + T\): \{\(E.val = E.val + T.val\)\}
+    \item \(T \to T * F\): \{\(stack[top-2].val = stack[top-2].val \times stack[top].val\); \(top = top - 2\)\}
+    \item \(F \to (E)\): \{\(stack[top-2].val = stack[top-1].val\); \(top = top - 2\)\}
+\end{itemize}
+
+\subsection{Esempio di parsing: \(3 * (5 + 2)\) \textbf{n}}
+
+\textbf{Sequenza di parsing con lo stack:}
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+& \(F\) & \(E\) & \(T\) & \(E+T\) & \(T*F\) & (\(E\)) & & \\
+\hline
+& \(\uparrow\) & & & & & & & \\
+\hline
+3 & * & ( & 5 & + & 2 & ) & \textbf{n} & \texttt{print} \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Evoluzione dello stack:}
+
+\begin{itemize}
+    \item Dopo applicazione di \(F \to (E)\): \(top\) viene decrementato
+    \item Dopo riduzione: i valori vengono calcolati e memorizzati nella posizione corretta dello stack
+\end{itemize}
+
+\textbf{Posizioni dello stack durante il parsing:}
+
+\begin{center}
+\begin{tabular}{c}
+top-2 \\
+\(\uparrow\) \\
+top-1 \\
+\(\uparrow\) \\
+top \\
+\end{tabular}
+\end{center}
