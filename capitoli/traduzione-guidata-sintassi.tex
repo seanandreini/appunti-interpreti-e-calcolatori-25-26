@@ -344,3 +344,208 @@ top-1 \\
 top \\
 \end{tabular}
 \end{center}
+
+
+
+
+
+\subsection{Schemi di traduzione con azioni interne alle produzioni}
+
+\subsubsection{Definizione e comportamento}
+
+Un'azione può essere inserita in qualsiasi posizione nel corpo di una produzione. Essa sarà eseguita non appena tutti i simboli grammaticali alla sua sinistra saranno stati consumati.
+
+Quindi, in una produzione del tipo \(B \to X \{a\} Y\), l'azione \(a\) è eseguita non appena abbiamo riconosciuto \(X\), se \(X\) è un terminale, oppure tutti i terminali derivati da \(X\), se quest'ultimo è un non-terminale.
+
+\textbf{Comportamento nel parsing:}
+
+\begin{itemize}
+    \item Nel parsing \textbf{bottom-up}: si esegue l'azione \(a\) non appena l'occorrenza in esame del simbolo \(X\) appare sulla cima dello stack
+    \item Nel parsing \textbf{top-down}: si esegue l'azione \(a\) immediatamente prima di tentare l'espansione di \(Y\), se \(Y\) è un non-terminale, oppure prima di cercare \(Y\) in ingresso, se \(Y\) è un terminale
+\end{itemize}
+
+\subsection{Eliminazione della ricorsione sinistra dagli SDT}
+
+\subsubsection{Motivazione e principi}
+
+Poiché nessuna grammatica che presenti ricorsione sinistra può essere analizzata mediante parsing top-down, diventa fondamentale eliminare tale tipo di ricorsione.
+
+Quando una grammatica è L-attribuita e la si trasforma per eliminare la ricorsione sinistra, dobbiamo gestire correttamente le azioni semantiche.
+
+\textbf{Assunzione:} Le azioni semantiche non calcolano valori di attributi ma effettuano azioni sulle stringhe di simboli terminali.
+
+\textbf{Principio:} Nel processo di trasformazione della grammatica, le azioni semantiche sono trattate come ulteriori simboli terminali.
+
+\subsubsection{Trasformazione standard}
+
+Le trasformazioni della grammatica preservano l'ordine dei terminali nella stringa generata. La strategia consiste nel sostituire produzioni della forma:
+\[
+A \to A\alpha \mid \beta
+\]
+con nuove produzioni usando un nuovo non-terminale \(R\):
+\[
+A \to \beta R
+\]
+\[
+R \to \alpha R \mid \varepsilon
+\]
+
+\subsubsection{Trasformazione per SDD S-attribuite}
+
+Per una singola produzione ricorsiva, una singola produzione non-ricorsiva, ed un singolo attributo del non-terminale ricorsivo sinistro.
+
+\textbf{Grammatica originale con ricorsione sinistra:}
+
+\begin{itemize}
+    \item \(A \to A\alpha\) con azione \(\{A.a = g(A_1.a, \alpha.y)\}\)
+    \item \(A \to X\) con azione \(\{A.a = f(X.x)\}\)
+\end{itemize}
+
+\textbf{Grammatica trasformata senza ricorsione sinistra:}
+
+\begin{itemize}
+    \item \(A \to X\) \(\{R.i = f(X.x)\}\) \(R\) \(\{A.a = R.s\}\)
+    \item \(R \to \alpha\) \(\{R_1.i = g(R.i, \alpha.y)\}\) \(R_1\) \(\{R.s = R_1.s\}\)
+    \item \(R \to \varepsilon\) \(\{R.s = R.i\}\)
+\end{itemize}
+
+Dove \(R.i\) è l'attributo ereditato e \(R.s\) è l'attributo sintetizzato di \(R\).
+
+\subsubsection{Esempio - Eliminazione ricorsione nelle espressioni}
+
+\textbf{SDT con ricorsione sinistra:}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Produzioni} & \textbf{Azioni semantiche} \\
+\hline
+\(E \to E_1 + T\) & \(\{\text{print}('+');\}\) \\
+\hline
+\(E \to T\) & \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{SDT senza ricorsione sinistra:}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Produzioni} & \textbf{Azioni semantiche} \\
+\hline
+\(E \to T R\) & \\
+\hline
+\(R \to + T\) \(\{\text{print}('+');\}\) \(R_1\) & \\
+\hline
+\(R \to \varepsilon\) & \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Esempio completo - Calcolatrice da tavolo}
+
+\textbf{Con ricorsione sinistra:}
+
+\begin{itemize}
+    \item \(E \to E_1 + T\) \(\{E.v = E_1.v + T.v\}\)
+    \item \(E \to T\) \(\{E.v = T.v\}\)
+    \item \(T \to T_1 \times F\) \(\{T.v = T_1.v \times F.v\}\)
+    \item \(T \to F\) \(\{T.v = F.v\}\)
+    \item \(F \to (E)\) \(\{F.v = E.v\}\)
+    \item \(F \to \textbf{digit}\) \(\{F.v = \textbf{digit}.\text{lexval}\}\)
+\end{itemize}
+
+\textbf{Senza ricorsione sinistra:}
+
+\begin{itemize}
+    \item \(E \to T\) \(\{R.i = T.v\}\) \(R\) \(\{E.v = R.s\}\)
+    \item \(R \to + T\) \(\{R_1.i = R.i + T.v\}\) \(R_1\) \(\{R.s = R_1.s\}\)
+    \item \(R \to \varepsilon\) \(\{R.s = R.i\}\)
+    \item \(T \to F\) \(\{X.i = F.v\}\) \(X\) \(\{T.v = X.s\}\)
+    \item \(X \to \times F\) \(\{X_1.i = X.i \times F.v\}\) \(X_1\) \(\{X.s = X_1.s\}\)
+    \item \(X \to \varepsilon\) \(\{X.s = X.i\}\)
+\end{itemize}
+
+\subsection{Procedure generali per SDT}
+
+\subsubsection{Procedura in tre passi}
+
+\begin{enumerate}
+    \item Si costruisce l'albero di parsing, ignorando le azioni semantiche
+    \item Si esamina ogni nodo interno \(N\) con produzione associata. Si aggiungono nuovi nodi figli di \(N\) corrispondenti alle azioni, in modo che scorrendo tutti i figli di \(N\) da sinistra a destra si abbiano esattamente gli stessi simboli e le stesse azioni semantiche
+    \item Si visita l'albero in preordine e non appena si incontra un nodo annotato con un'azione la si esegue
+\end{enumerate}
+
+\subsubsection{Esempio con albero di parsing}
+
+Per l'espressione \(3 \times 5 + 4\), l'output in notazione prefissa è: \(+ (\times 3 \ 5) \ 4\)
+
+Le azioni \(\{\text{print}('+');\}\) e \(\{\text{print}('*');\}\) vengono eseguite visitando l'albero in preordine, stampando gli operatori prima degli operandi.
+
+
+L'albero rappresenta il parsing dell'espressione \(3 \times 5 + 4\) con le azioni di stampa in notazione prefissa.
+
+\begin{center}
+\begin{tikzpicture}[
+  level distance=1.6cm,
+  level 1/.style={sibling distance=5cm},
+  level 2/.style={sibling distance=3.5cm},
+  level 3/.style={sibling distance=2.8cm},
+  level 4/.style={sibling distance=2cm},
+  level 5/.style={sibling distance=1.5cm},
+  every node/.style={align=center, font=\small},
+  action/.style={fill=yellow!40, rectangle, rounded corners, inner sep=3pt, font=\footnotesize}
+]
+
+\node (L) {\(L\)}
+  child {node (E1) {\(E\)}
+    child {node (E2) {\(E\)}
+      child {node (T1) {\(T\)}
+        child {node (T2) {\(T\)}
+          child {node (F1) {\(F\)}
+            child {node (d1) {digit}
+              child {node[action] (a3) {\{\text{print}(3);\}}}
+            }
+          }
+        }
+        child {node (star) {*}}
+        child {node (F2) {\(F\)}
+          child {node (d2) {digit}
+            child {node[action] (a5) {\{\text{print}(5);\}}}
+          }
+        }
+      }
+      child {node (plus) {+}}
+      child {node (T3) {\(T\)}
+        child {node (F3) {\(F\)}
+          child {node (d3) {digit}
+            child {node[action] (a4) {\{\text{print}(4);\}}}
+          }
+        }
+      }
+    }
+    child {node (n) {\textbf{n}}}
+  };
+
+% Azioni semantiche con linee tratteggiate
+\node[action, left=2cm of E2] (print_plus) {\{\text{print}('+');\}};
+\node[action, left=2cm of T2] (print_star) {\{\text{print}('*');\}};
+
+% Linee tratteggiate che collegano le azioni ai nodi
+\draw[dashed, gray, thick] (print_plus) -- (E2);
+\draw[dashed, gray, thick] (print_star) -- (T1);
+
+\end{tikzpicture}
+\end{center}
+
+\textbf{Output in notazione prefissa:} + * 3 5 4
+
+\textbf{Ordine di esecuzione delle azioni:}
+\begin{enumerate}
+    \item print('+')
+    \item print('*')
+    \item print(3)
+    \item print(5)
+    \item print(4)
+\end{enumerate}
