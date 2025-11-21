@@ -17,10 +17,34 @@
 \usetikzlibrary{positioning,shapes.geometric}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning, calc}
+
+% --- PACCHETTO PER IL CODICE (Mancava questo o la sua configurazione) ---
+\usepackage{listings}
+\usepackage{xcolor}
+
+% --- CONFIGURAZIONE GRAFICA DEL CODICE ---
+\lstset{
+    basicstyle=\ttfamily\small,       % Stile del font base
+    keywordstyle=\color{blue}\bfseries, % Parole chiave in blu
+    stringstyle=\color{red},          % Stringhe in rosso
+    commentstyle=\color{gray}\itshape,% Commenti in grigio
+    showspaces=false,                 % <--- IMPORTANTE: Nasconde i simboli degli spazi nel codice
+    showstringspaces=false,           % <--- IMPORTANTE: Nasconde gli spazi dentro le stringhe "..."
+    frame=single,                     % Riquadro attorno al codice
+    breaklines=true,                  % A capo automatico
+    tabsize=2,                        % Dimensione tabulazione
+    language=C,                       % Linguaggio (o C++ o Java)
+    morekeywords={label, string},     % Aggiunge parole chiave personalizzate (se servono)
+    literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1 % Accenti
+}
 
 % --- IMPOSTAZIONI PAGINA ---
 \usepackage{geometry}
 \geometry{a4paper, top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+
 
 % --- TITOLO ---
 \title{Appunti di Interpreti e Compilatori}

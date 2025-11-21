@@ -549,3 +549,374 @@ L'albero rappresenta il parsing dell'espressione \(3 \times 5 + 4\) con le azion
     \item print(5)
     \item print(4)
 \end{enumerate}
+
+%lezione 20 novembre
+\subsection{Trasformazione da SDD L-attribuita a SDT}
+Regole per trasformare SDD $\to$ SDT per parsing Top-Down:
+
+\begin{enumerate}
+    \item \textbf{Azioni per Attributi Ereditati:} Si aggiungono le azioni che calcolano gli attributi ereditati di un non-terminale $A$ \textbf{immediatamente prima} dell'occorrenza di $A$ nel corpo della produzione.
+    \item \textbf{Azioni per Attributi Sintetizzati:} Si aggiungono le azioni che calcolano un attributo sintetizzato relativo alla testa della produzione \textbf{alla fine} del corpo di quella produzione.
+\end{enumerate}
+
+\section*{Esempio: Traduzione dello Statement \texttt{while}}
+Consideriamo la produzione:
+\[ S \to \mathbf{while} \ (C) \ S_1 \]
+
+Useremo i seguenti attributi per generare il codice intermedio richiesto:
+
+\begin{enumerate}
+    \item L'attributo \textbf{ereditato} $S.next$ indica l'etichetta relativa all'inizio del codice che deve essere eseguito dopo che $S$ è terminato.
+    
+    \item L'attributo \textbf{sintetizzato} $S.code$ è la porzione di codice intermedio che implementa uno statement $S$ e termina con un salto a $S.next$ (se necessario, o cade nel flusso successivo).
+    
+    \item L'attributo \textbf{ereditato} $C.true$ indica l'etichetta relativa all'inizio del codice che deve essere eseguito se $C$ risulta vera.
+    
+    \item L'attributo \textbf{ereditato} $C.false$ indica l'etichetta relativa all'inizio del codice che deve essere eseguito se $C$ risulta falsa.
+    
+    \item L'attributo \textbf{sintetizzato} $C.code$ rappresenta la porzione di codice intermedio che implementa la condizione $C$ e che salta a $C.true$ oppure $C.false$ a seconda del valore dell'espressione $C$.
+\end{enumerate}
+
+\subsection*{Regole Semantiche (SDD)}
+Per generare le nuove etichette e definire il flusso, si applicano le seguenti regole:
+
+\begin{align*}
+& L1 = \text{new}(); \quad \text{(Genera etichetta inizio ciclo)} \\
+& L2 = \text{new}(); \quad \text{(Genera etichetta inizio corpo)} \\
+& S_1.next = L1; \quad \text{(Dopo il corpo, torna a valutare la condizione)} \\
+& C.false = S.next; \quad \text{(Se falso, esce dal ciclo)} \\
+& C.true = L2; \quad \text{(Se vero, esegue il corpo)} \\
+& S.code = \textbf{label} \ || \ L1 \ || \ C.code \ || \ \textbf{label} \ || \ L2 \ || \ S_1.code
+\end{align*}
+
+\subsection*{Logica del Flusso di Controllo}
+Il funzionamento del codice generato segue questo schema logico (rappresentazione del diagramma):
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+      node distance=3.5cm, % Aumentata la distanza orizzontale
+      box/.style={
+          draw, 
+          minimum width=1.5cm, 
+          minimum height=1cm, 
+          align=center, 
+          font=\large\bfseries
+      },
+      arrow/.style={
+          ->, 
+          >=Stealth, 
+          thick,
+          rounded corners=5pt
+      }
+  ]
+
+  % --- 1. DEFINIZIONE DEI NODI ---
+  
+  % Nodo C (Condizione)
+  \node[box] (C) {C};
+  
+  % Nodo S1 (Statement) - Posizionato più lontano per leggibilità
+  \node[box, right=of C] (S1) {S\textsubscript{1}};
+
+  % --- 2. COORDINATE PER IL BOX ESTERNO (S) ---
+  % Calcolo coordinate per fare il rettangolo arancione grande abbastanza
+  \coordinate (TopLeft) at ($(C.north west) + (-2, 2.5)$);
+  \coordinate (BottomRight) at ($(S1.south east) + (2, -2)$);
+  \coordinate (ExitPoint) at ($(BottomRight) + (0, 0.5)$); % Punto di uscita fittizio a destra
+
+  % Disegno il box S (sfondo)
+  \draw[orange!80!yellow, thick] (TopLeft) rectangle (BottomRight);
+  
+  % Etichetta grande "S" (spostata in basso a sinistra per non disturbare)
+  \node[font=\Huge\bfseries\sffamily, orange!40!yellow, anchor=south west] 
+      at ($(TopLeft |- BottomRight) + (0.2, 0.2)$) {S};
+
+  % --- 3. FRECCE E FLUSSO ---
+
+  % Ingresso L
+  \draw[arrow, black] ($(C.west) - (1.5, 0)$) -- node[above] {L\textsubscript{1}} (C.west);
+  \draw[arrow, orange!80!yellow, thick] ($(TopLeft |- C) + (-1, 0.5)$) -- node[above, black] {L} ($(TopLeft |- C) + (0.5, 0.5)$);
+
+  % Percorso TRUE (Centrale)
+  \draw[arrow, cyan, thick] (C.east) -- 
+      node[above, text=black, yshift=2pt] {TRUE} 
+      node[below, text=black] {L\textsubscript{2}} 
+      (S1.west);
+  
+  % Nota sopra il percorso True
+  \node[font=\small\sffamily, align=center] at ($(C)!0.5!(S1) + (0, 0.8)$) {Eseguo 1\textdegree{} istruzione};
+
+  % Percorso LOOP (Ritorno da S1 a C) - Alto
+  \draw[arrow, cyan, thick] (S1.north) -- ++(0, 1) coordinate(midup)
+      -- ($(C.north) + (0, 1)$) 
+      node[midway, above, text width=5cm, align=center, black] {Devo rifare controllo\\condizione} 
+      -- (C.north);
+
+  % Percorso FALSE (Uscita) - Basso
+  \draw[arrow, green!60!black, thick] (C.south) 
+      to[out=-90, in=180] ($(S1.south) + (0, -1)$) 
+      -- (ExitPoint |- S1.south) 
+      -- ++(1,0) node[right, black] {NEXT};
+      
+  \node[below right, font=\small] at (C.south east) {FALSE};
+
+  \end{tikzpicture}
+  \caption{Flusso di controllo del ciclo While.}
+\end{figure}
+
+\textbf{Spiegazione del diagramma:}
+\begin{itemize}
+    \item Il flusso entra nell'etichetta $L1$ (inizio del \texttt{while}).
+    \item Viene valutata la condizione $C$.
+    \item Se $C$ è \textbf{TRUE}, si va all'etichetta $L2$, si esegue lo statement $S_1$ e, al termine di $S_1$, il flusso deve tornare indietro a $L1$ per rivalutare la condizione.
+    \item Se $C$ è \textbf{FALSE}, il flusso salta direttamente all'uscita ($S.next$ o NEXT).
+\end{itemize}
+
+\subsection*{Schema di Traduzione (SDT)}
+Inserendo le azioni semantiche all'interno della produzione per supportare la generazione durante il parsing (anche top-down), otteniamo:
+
+\begin{verbatim}
+S -> while (
+    { L1 = new(); L2 = new(); C.false = S.next; C.true = L2; }
+    C )
+    { S1.next = L1; }
+    S1
+    { S.code = label || L1 || C.code || label || L2 || S1.code; }
+\end{verbatim}
+
+In questo modo, le etichette $L1$ e $L2$ vengono generate prima di analizzare la condizione, e l'attributo $S_1.next$ viene impostato correttamente prima di analizzare il corpo $S_1$.
+
+\subsection{Implementazione di SDD L-attribute}
+
+I seguenti sono metodi che realizzano la traduzione durante la visita di un albero di parsing
+
+\begin{itemize}
+    \item \textbf{Traduzione durante la visita di un albero di parsing:}
+    \begin{enumerate}
+        \item Costruzione di un albero di parsing annotato (funziona per qualsiasi SDD non circolare).
+        \item Costruzione dell'albero, aggiunta delle azioni e loro esecuzione in pre-ordine.
+    \end{enumerate}
+    \textit{Nota:} Questo approcci hanno un costo computazionale elevato (costruzione dell'albero).
+
+    \item \textbf{Metodi di traduzione durante il parsing:}
+    \begin{enumerate}
+        \item Utilizzo di un parser a discesa ricorsiva con una funzione per ogni non-terminale.
+        \item Generazione del codice al volo (On-the-fly), utilizzando un parser a discesa ricorsiva.
+        \item Implementazione di uno SDT insieme a un parser LL.
+        \item Implementazione di uno SDT insieme a un parser LR.
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{Traduzione durante il parsing a discesa ricorsiva}
+Un parser a discesa ricorsiva prevede una funzione A() per ogni non-terminale A della grammatica. È possibile estendere un tale parser
+e trasformarlo in un traduttore facendo in modo che:
+\begin{itemize}
+    \item Gli argomenti della funzione $A()$ siano gli \textbf{attributi ereditati} del simbolo non-terminale $A$.
+    \item Il valore restituito da $A()$ sia l'insieme degli \textbf{attributi sintetizzati} del simbolo $A$.
+\end{itemize}
+
+Il corpo della funzione deve occuparsi sia del parsing che della gestione degli attributi, in particolare la funzione deve:
+\begin{enumerate}
+    \item Decidere quale produzione utilizzare per espandere $A$.
+    \item Verificare che ogni simbolo terminale appaia in ingresso quando richiesto; in quanto segue assumeremo che non sia necessario effettuare backtracking.
+    \item Conservare in variabili locali i valori degli attributi necessari per il calcolo degli attributi ereditati relativi ai non-terminali nel corpo della produzione e/o
+    degli attributi ereditati relativi al non-terminale alla testa della produzione.
+    \item Chiamare le funzioni corrispondenti ai non-terminali nel corpo della produzione, passando gli argomenti corretti (ereditati) e salvando i risultati (sintetizzati).
+\end{enumerate}
+
+\subsubsection{Esempio: Implementazione \texttt{while} con ritorno di stringa}
+\begin{lstlisting}[caption={Pseudocodice per la traduzione del while}]
+  string S(label next) {
+      string Scode, Ccode; /* variabili locali per frammenti di codice */
+      label L1, L2;        /* etichette locali */
+        
+      if (il simbolo_corrente è il token WHILE) {
+        
+          avanza il puntatore di ingresso;
+            
+          verifica che '(' sia il prossimo simbolo, quindi avanza;
+            
+          L1 = new(); // Etichetta inizio controllo condizione
+          L2 = new(); // Etichetta inizio corpo del ciclo
+            
+          Ccode = C(next, L2); 
+            
+          verifica che ')' sia il prossimo simbolo, quindi avanza;
+            
+          Scode = S(L1); 
+            
+          // Costruzione dell'attributo sintetizzato finale
+          return ("label" || L1 || Ccode || "label" || L2 || Scode);
+      }
+      else { 
+          /* gestione altri tipi di statement */ 
+      }
+  }
+  \end{lstlisting}
+
+  \subsection{Esempio Pratico: Parser a Discesa Ricorsiva per Espressioni}
+  Di seguito è riportato il codice (pseudocodice C-like) per un parser che gestisce espressioni aritmetiche con eliminazione della ricorsione sinistra e gestione degli attributi.
+  
+  \textbf{Grammatica di riferimento (dopo eliminazione ricorsione sinistra):}
+  \begin{align*}
+  E &\to T \{ R.i = T.v \} R \{ E.v = R.s \} \\
+  R &\to + T \{ R_1.i = R.i + T.v \} R_1 \{ R.s = R_1.s \} \mid \epsilon \{ R.s = R.i \} \\
+  T &\to F \{ X.i = F.v \} X \{ T.v = X.s \} \\
+  X &\to * F \{ X_1.i = X.i * F.v \} X_1 \{ X.s = X_1.s \} \mid \epsilon \{ X.s = X.i \} \\
+  F &\to ( E ) \{ F.v = E.v \} \mid d \{ F.v = d.lexval \}
+  \end{align*}
+  
+  \textbf{Implementazione delle funzioni:}
+  
+  \begin{lstlisting}
+  // Gestione Produzione E -> T R
+  int E() {
+      int v_i, ev;
+      // FIRST(T R) include FIRST(F) = { (, d }
+      if (lookahead in { '(', 'd' }) {
+          v_i = T();       // Calcola T.val
+          ev = R(v_i);     // Passa T.val come ereditato a R
+          return ev;       // Ritorna attributo sintetizzato
+      } else {
+          error();
+      }
+  }
+  
+  // Gestione Produzione T -> F X
+  int T() {
+      int x_i, tv;
+      if (lookahead in { '(', 'd' }) {
+          x_i = F();       // Calcola F.val
+          tv = X(x_i);     // Passa F.val come ereditato a X
+          return tv;
+      } else {
+          error();
+      }
+  }
+  
+  // Gestione Produzione R -> + T R1 | epsilon
+  int R(int v_i) {
+      int v_if, vs, tv;
+      if (lookahead == '+') {
+          match('+');
+          tv = T();           // Calcola valore del termine successivo
+          v_if = v_i + tv;    // Calcola nuovo ereditato: somma parziale
+          vs = R(v_if);       // Ricorsione
+          return vs;
+      } 
+      // Gestione produzione epsilon (FOLLOW(R) include ')', '$')
+      else if (lookahead in { ')', '$' }) {
+          return v_i;         // Ritorna il valore accumulato finora
+      } else {
+          error();
+      }
+  }
+  
+  // Gestione Produzione X -> * F X1 | epsilon
+  int X(int x_i) {
+      int x_1i, xs, fv;
+      if (lookahead == '*') {
+          match('*');
+          fv = F();           // Calcola valore del fattore
+          x_1i = x_i * fv;    // Calcola nuovo ereditato: prodotto parziale
+          xs = X(x_1i);       // Ricorsione
+          return xs;
+      }
+      // Gestione produzione epsilon (FOLLOW(X) include '+', ')', '$')
+      else if (lookahead in { '+', ')', '$' }) {
+          return x_i;
+      } else {
+          error();
+      }
+  }
+  
+  // Gestione Produzione F -> ( E ) | d
+  int F() {
+      int fv;
+      if (lookahead == '(') {
+          match('(');
+          fv = E();
+          match(')');
+          return fv;
+      } 
+      else if (lookahead == 'd') {
+          fv = lexval; // Valore del numero
+          match('d');
+          return fv;
+      } else {
+          error();
+      }
+  }
+  \end{lstlisting}
+  
+
+  \subsubsection{Generazione del codice al volo}
+
+  In molti casi comuni, tra cui il nostro esempio di generazione del codice del costrutto \texttt{while}, è possibile costruire incrementalmente porzioni di codice e memorizzarle in un array o in un file mediante opportune azioni dello SDT. Per fare ciò, le seguenti condizioni devono essere soddisfatte:
+  
+  \begin{enumerate}
+      \item Per uno o più non-terminali esiste un attributo \textit{principale}. Per semplicità assumeremo che gli attributi principali siano tutti di tipo stringa.
+      
+      \item Gli attributi principali sono sintetizzati.
+      
+      \item Le regole per la valutazione degli attributi principali garantiscono che:
+      \begin{enumerate}
+          \item[(a)] l'attributo principale è dato dal concatenamento degli attributi principali dei non-terminali che appaiono nel corpo della produzione più, eventualmente, altri elementi che non sono attributi principali;
+          
+          \item[(b)] gli attributi principali dei non-terminali appaiono nella regola nello stesso ordine in cui i non-terminali appaiono nel corpo della produzione.
+      \end{enumerate}
+  \end{enumerate}
+  
+  Tali condizioni implicano che l'attributo principale può essere costruito emettendo solamente gli elementi del concatenamento che non sono attributi principali.
+
+\subsubsection{Esempio: Statement While}
+Possiamo modificare la funzione in modo che emetta gli elementi dell'attributo principale $S.code$ invece di salvarli per poi concatenarli nel valore di $S.code$ che verrà poi restituito.
+
+Le funzioni $S()$ e $C()$ non restituiscono alcun valore, poiché tutti i loro attributi sintetizzati sono prodotti mediante stampa. Inoltre, la posizione delle istruzioni di stampa nella funzione è importante. L'ordine in cui i vari elementi vengono stampati è il seguente: per prima cosa la stringa ``label'' $L1$, quindi il codice relativo al non-terminale $C$, la stringa ``label'' $L2$, e infine il codice derivante dalla chiamata ricorsiva della funzione $S()$ .
+
+\textbf{Codice con generazione al volo (pseudocodice):}
+
+\begin{lstlisting}
+void S(label next) {
+    label L1, L2; /* etichette locali */
+    if (simbolo_corrente è il token WHILE) {
+        avanza il puntatore di ingresso;
+        verifica che '(' sia il prossimo simbolo, quindi avanza;
+        
+        L1 = new(); 
+        L2 = new();
+        
+        print("label", L1); // Stampa immediata
+        
+        // C gestisce i salti: true -> L2 (corpo), false -> next (uscita)
+        C(next, L2); 
+        
+        verifica che '(' sia il prossimo simbolo, quindi avanza;
+        
+        print("label", L2); // Stampa etichetta corpo
+        
+        S(L1); // Chiamata ricorsiva per il corpo, torna a L1 dopo esec.
+    }
+    else { /* altri statement */ }
+}
+\end{lstlisting}
+
+\subsection{Trasformazione SDD L-attribuita su grammatica LL a SDT azioni interne alle produzioni}
+Supponiamo che una SDD L-attribuita sia basata su una grammatica LL e che sia stata convertita in uno SDT in cui le azioni si trovano all'interno delle produzioni. Possiamo effettuare la traduzione durante il parsing LL a patto di estendere lo stack del parser in modo da poter contenere \textbf{diversi tipi di record}.
+
+Oltre ai record che rappresentano i terminali e i non-terminali della grammatica, lo stack del parser conterrà:
+\begin{itemize}
+    \item \textbf{action-record}: cioè record che contengono puntatori ad azioni che devono essere eseguite, e anche copie di attributi.
+    \item \textbf{synthesize-record}: ovvero record destinati a salvare gli attributi sintetizzati dei non-terminali. Possono contenere azioni il cui scopo, in ordine, è copiare gli attributi sintetici più in basso nello stack in altri record.
+\end{itemize}
+
+Per gestire gli attributi sullo stack ci baseremo sui seguenti principi:
+
+\begin{itemize}
+    \item Gli attributi \textbf{ereditati} di un non-terminale $A$ sono memorizzati sullo stack, nel record che rappresenta il non-terminale. Il codice necessario per la valutazione di tali attributi è in genere rappresentato mediante un \textit{action-record} memorizzato sullo stack, immediatamente al di sopra del record che rappresenta $A$.
+    
+    \item Gli attributi \textbf{sintetizzati} relativi al non-terminale $A$ sono memorizzati in un \textit{synthesize-record} separato e posizionato sullo stack immediatamente al di sotto del record relativo ad $A$.
+\end{itemize}
+
+
