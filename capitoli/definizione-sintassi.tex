@@ -336,12 +336,19 @@ cC -> cc
     \end{Verbatim}
     Derivazione di `aaabbbccc`:
     \begin{align*}
-    S & \Rightarrow aSBC \Rightarrow aaBCBC \\
-      & \Rightarrow aaBbCBC \Rightarrow aaBbBCC \\
-      & \Rightarrow aaabbCC \Rightarrow aaabbCbC \\
-      & \Rightarrow aaabbBCC \Rightarrow aaabbbCCC \\
-      & \Rightarrow aaabbbcCC \Rightarrow aaabbbccc
-    \end{align*}
+        S & \Rightarrow aSBC \\
+          & \Rightarrow aaSBCBC \\
+          & \Rightarrow aaaBCBCBC \quad \text{(Generazione completata: 3a, 3B, 3C)} \\
+          & \Rightarrow aaaBBCBCBC \quad \text{(Sposto la prima C a destra: $CB \to BC$)} \\
+          & \Rightarrow aaaBBCBCC \quad \text{(Sposto la seconda C: $CB \to BC$)} \\
+          & \Rightarrow aaaBBBCCC \quad \text{(Ordinamento completato: $CB \to BC$)} \\
+          & \Rightarrow aaabBBCCC \quad \text{(Inizio conversione: $aB \to ab$)} \\
+          & \Rightarrow aaabbBCCC \quad \text{(Propago la b: $bB \to bb$)} \\
+          & \Rightarrow aaabbbCCC \quad \text{(Propago la b: $bB \to bb$)} \\
+          & \Rightarrow aaabbbcCC \quad \text{(La b converte la C: $bC \to bc$)} \\
+          & \Rightarrow aaabbbccC \quad \text{(Propago la c: $cC \to cc$)} \\
+          & \Rightarrow aaabbbccc \quad \text{(Propago la c: $cC \to cc$)}
+        \end{align*}
 
 \end{itemize}
 
